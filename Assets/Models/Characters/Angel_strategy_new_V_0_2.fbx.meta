@@ -1,0 +1,164 @@
+fileFormatVersion: 2
+guid: 5430aab2d5c804743b75108b1e7cdd74
+timeCreated: 1506365807
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: Armature
+    100004: Bedro_L
+    100006: Bedro_P
+    100008: Cube
+    100010: Golova
+    100012: Golova_end
+    100014: Golova_end_end
+    100016: Kluchitsa_L
+    100018: Kluchitsa_L_end
+    100020: Kluchitsa_L_end_end
+    100022: Kluchitsa_P
+    100024: Kluchitsa_P_end
+    100026: Kluchitsa_P_end_end
+    100028: Koleno_L
+    100030: Koleno_L_end
+    100032: Koleno_L_end_end
+    100034: Koleno_P
+    100036: Koleno_P_end
+    100038: Koleno_P_end_end
+    100040: L_Wing_1
+    100042: L_Wing_2
+    100044: L_Wing_3
+    100046: L_Wing_3_end
+    100048: Lokot_L
+    100050: Lokot_L_end
+    100052: Lokot_L_end_end
+    100054: Lokot_P
+    100056: Lokot_P_end
+    100058: Lokot_P_end_end
+    100060: R_Wing_1
+    100062: R_Wing_2
+    100064: R_Wing_3
+    100066: R_Wing_3_end
+    100068: Ruka_L
+    100070: Ruka_P
+    100072: Skelet
+    100074: Tors
+    100076: Tors.001
+    100078: Tors.001_end
+    100080: Tors.002
+    100082: Tors.002_end
+    400000: //RootNode
+    400002: Armature
+    400004: Bedro_L
+    400006: Bedro_P
+    400008: Cube
+    400010: Golova
+    400012: Golova_end
+    400014: Golova_end_end
+    400016: Kluchitsa_L
+    400018: Kluchitsa_L_end
+    400020: Kluchitsa_L_end_end
+    400022: Kluchitsa_P
+    400024: Kluchitsa_P_end
+    400026: Kluchitsa_P_end_end
+    400028: Koleno_L
+    400030: Koleno_L_end
+    400032: Koleno_L_end_end
+    400034: Koleno_P
+    400036: Koleno_P_end
+    400038: Koleno_P_end_end
+    400040: L_Wing_1
+    400042: L_Wing_2
+    400044: L_Wing_3
+    400046: L_Wing_3_end
+    400048: Lokot_L
+    400050: Lokot_L_end
+    400052: Lokot_L_end_end
+    400054: Lokot_P
+    400056: Lokot_P_end
+    400058: Lokot_P_end_end
+    400060: R_Wing_1
+    400062: R_Wing_2
+    400064: R_Wing_3
+    400066: R_Wing_3_end
+    400068: Ruka_L
+    400070: Ruka_P
+    400072: Skelet
+    400074: Tors
+    400076: Tors.001
+    400078: Tors.001_end
+    400080: Tors.002
+    400082: Tors.002_end
+    4300000: Cube
+    9500000: //RootNode
+    13700000: Cube
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
