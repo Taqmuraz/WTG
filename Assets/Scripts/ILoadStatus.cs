@@ -9,7 +9,12 @@ public class ILoadStatus : MonoBehaviour {
 	public Text text;
 	public AsyncOperation loading;
 
+	private void Start () {
+		text.fontSize = IFontSetter.fontScale;
+		text.font = IFontSetter.font;
+	}
+
 	private void Update () {
-		text.text = "Загрузка..." + ((int)(loading.progress * 100)) + " %" + '\n' + "Приоритет : " + loading.priority;
+		text.text = "Загрузка..." + ((int)(loading.progress * 100)) + " %";
 	}
 }

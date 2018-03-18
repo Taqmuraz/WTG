@@ -123,6 +123,9 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		if (state != IGameMenuState.Loot && lootableChest) {
 			lootableChest = null;
 		}
+		if (state == IGameMenuState.CharacterInfo) {
+			portait.texture = ITextureDrawer.GetFromPerson (character.status);
+		}
 
 		toGame.gameObject.SetActive (state != IGameMenuState.RuneCreate);
 
@@ -226,8 +229,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			FillMessages (messagesParent, MyDebug.messages.ToArray ());
 			MyDebug.haveToUpdate = false;
 		}
-
-		portait.texture = ITextureDrawer.GetFromPerson (character.status);
 
 		bool sp = character.status.canUseRunes;
 
