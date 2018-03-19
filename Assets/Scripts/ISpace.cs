@@ -44,7 +44,13 @@ public class ISpace : MonoBehaviour {
 	private float time = 0;
 
 	private void Load () {
-		AsyncOperation op = SceneManager.LoadSceneAsync (level);
+		AsyncOperation op;
+		if (level > 2) {
+			string name = IGame.buffer.currentLocationName;
+			op = SceneManager.LoadSceneAsync (name);
+		} else {
+			op = SceneManager.LoadSceneAsync (level);
+		}
 		GameObject loadIndicator = (GameObject)Resources.Load ("Prefabs/LoadStatus");
 		ILoadStatus st = ((GameObject)Instantiate (loadIndicator)).GetComponent<ILoadStatus>();
 		op.priority = 15;

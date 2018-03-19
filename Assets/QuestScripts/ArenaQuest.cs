@@ -53,11 +53,6 @@ public class ArenaQuest : MonoBehaviour {
 		if (iquest.did) {
 			Destroy (this);
 		}
-		main_character = ICharacter.GetPlayer ();
-		director = ICharacter.GetByName (directorName);
-		director.status.dialogData.onAction = delegate {
-			PrepareBattle();
-		};
 	}
 	private bool bothEntered = false;
 
@@ -83,6 +78,15 @@ public class ArenaQuest : MonoBehaviour {
 	}
 
 	private void Update () {
+		if (!main_character || !director) {
+			main_character = ICharacter.GetPlayer ();
+			director = ICharacter.GetByName (directorName);
+			if (director) {
+				director.status.dialogData.onAction = delegate {
+					PrepareBattle();
+				};
+			}
+		}
 		if (main_character && iquest.available) {
 			if (enemies.Length > 0) {
 				if (iquest.enemy_index < enemies.Length) {
@@ -92,7 +96,7 @@ public class ArenaQuest : MonoBehaviour {
 								enemies [iquest.enemy_index].MoveTo (enemyPoint.position);
 							} else {
 								if ((main_character.trans.position - playerPoint.position).magnitude < 10) {
-									enemies [iquest.enemy_index].status.reputationType = IReputationType.Bandit;
+									enemies [iquest.enemy_index].status.reputationType = IReputationType.Monster;
 									bothEntered = true;
 								}
 							}

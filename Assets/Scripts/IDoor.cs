@@ -15,6 +15,8 @@ public class IDoorSave : ISaveble
 
 public class IDoor : IUsable {
 
+	public static List<IDoor> doorsAll = new List<IDoor>();
+
 	public IDoorSave data;
 
 	private Vector3 startEuler;
@@ -36,6 +38,13 @@ public class IDoor : IUsable {
 	}
 	private void Start () {
 		DoorStart ();
+		doorsAll.Add (this);
+		usablesAll.Add (this);
+	}
+
+	private void OnDestroy () {
+		usablesAll.Remove (this);
+		doorsAll.Remove (this);
 	}
 
 	public void Use (ICharacter whom) {
@@ -58,7 +67,7 @@ public class IDoor : IUsable {
 	public static IDoor GetNearestClosedDoor (Vector3 point) {
 		IDoor d = null;
 		float min = 100;
-		IDoor[] doors = FindObjectsOfType<IDoor> ();
+		IDoor[] doors = IDoor.doorsAll.ToArray ();
 		for (int i = 0; i < doors.Length; i++) {
 			if (doors[i] is IChest) {
 				continue;

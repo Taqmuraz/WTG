@@ -250,14 +250,13 @@ public class IGame
 			file.Close ();
 		}
 		IQuest.current = game.progress;
-		MyDebug.messages = game.messages;
 		buffer = game;
 		return game;
 	}
 	public static void CaptureGame () {
 		List<ISaveble> savs = new List<ISaveble> ();
 
-		ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
+		ICharacter[] chars = ICharacter.charactersAll.ToArray ();
 
 		for (int i = 0; i < chars.Length; i++) {
 			chars [i].status.dialogData.onAction = delegate() {
@@ -266,13 +265,13 @@ public class IGame
 			savs.Add(chars[i].status);
 		}
 
-		IItemObject[] objs = IItemObject.FindObjectsOfType<IItemObject> ();
+		IItemObject[] objs = IItemObject.itemObjectsAll.ToArray ();
 
 		for (int i = 0; i < objs.Length; i++) {
 			savs.Add (objs[i].CaptureItem());
 		}
 
-		IDoor[] doors = IDoor.FindObjectsOfType<IDoor> ();
+		IDoor[] doors = IDoor.doorsAll.ToArray ();
 
 		for (int i = 0; i < doors.Length; i++) {
 			savs.Add (doors [i].data);
@@ -282,7 +281,6 @@ public class IGame
 		IGame.buffer.date = DateTime.Now;
 		IGame.buffer.progress = IQuest.current;
 		IGame.buffer.currentLocation.hasBeenHere = true;
-		IGame.buffer.messages = MyDebug.messages;
 	}
 }
 [System.Serializable]
@@ -384,34 +382,35 @@ public class IStatus : ISaveble
 
 			switch (iRace) {
 			case IRace.Angel:
-				imm = new Immunities (-50, 25, 25, 25, 25, 100);
+				imm = new Immunities (-50, 0, 0, 0, 0, 75);
 				break;
 			case IRace.Devil:
-				imm = new Immunities (15, 90, -50, -100, 0, -100);
+				imm = new Immunities (0, 80, -100, 0, 0, -50);
 				break;
 			case IRace.Elf:
-				imm = new Immunities (-100, -25, 50, 90, -25, 100);
+				imm = new Immunities (-25, 0, 0, 0, 0, 45);
 				break;
 			case IRace.Human:
 				imm = new Immunities (0, 0, 0, 0, 0, 0);
 				break;
 			case IRace.Orc:
-				imm = new Immunities (75, -50, -50, 50, 90, -50);
+				imm = new Immunities (35, 25, 0, 0, 25, -100);
 				break;
 			case IRace.Vampire:
-				imm = new Immunities (100, -300, 0, 0, 0, -100);
+				imm = new Immunities (50, -100, 0, 0, 0, -100);
 				break;
 			case IRace.Verwolf:
-				imm = new Immunities (75, -25, -25, 100, 50, 0);
+				imm = new Immunities (50, -50, -50, 0, 0, -50);
 				break;
 			case IRace.Witch:
-				imm = new Immunities (-25, 100, -100, 100, -50, -100);
+				imm = new Immunities (0, 0, 0, 0, 0, -50);
 				break;
 			}
 
 			switch (iType) {
 			case IClassType.Antimage:
-				imm += new Immunities (0, 5 * level, 5 * level, 5 * level, 5 * level, 5 * level);
+				int m = 20 + 5 * level;
+				imm += new Immunities (0, m, m, m, m, m);
 				break;
 			case IClassType.Monk:
 				imm += new Immunities (5 * level, 0, 0, 0, 0, 0);
@@ -964,7 +963,7 @@ public class IReputation
 	{
 		get
 		{
-			return new IReputation (-1, -1, -1, 1, -1, -1);
+			return new IReputation (-1, -1, -1, -1, -1, -1);
 		}
 	}
 	public static IReputation standart_guard
@@ -1003,6 +1002,14 @@ public class ICharacter : MonoBehaviour
 	public void Start () {
 		PrepareToGame ();
 	}
+	private void Awake () {
+		trans = transform;
+		anims = GetComponent<Animator> ();
+		agent = GetComponent<UnityEngine.AI.NavMeshAgent> ();
+		main_render = GetComponentInChildren<SkinnedMeshRenderer> ();
+		charactersAll.Add (this);
+	}
+	public static List<ICharacter> charactersAll = new List<ICharacter>();
 	public void AI_Update () {
 
 		if (status.canUseRunes && status.rune < 0) {
@@ -1037,13 +1044,11 @@ public class ICharacter : MonoBehaviour
 		}
 	}
 	public void PrepareToGame () {
-		trans = transform;
-		anims = GetComponent<Animator> ();
-		agent = GetComponent<UnityEngine.AI.NavMeshAgent> ();
-		main_render = GetComponentInChildren<SkinnedMeshRenderer> ();
 
 		weaponImage = GetComponentInChildren<RawImage> ();
 		//weaponImage.rectTransform.parent.localEulerAngles = new Vector3(45, 180, -135);
+
+		weaponImage.raycastTarget = false;
 
 		PrepareRend ();
 
@@ -1146,7 +1151,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public static ICharacter GetPlayer () {
 		ICharacter finded = null;
-		ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter>();
+		ICharacter[] chars = ICharacter.charactersAll.ToArray();
 		for (int i = 0; i < chars.Length; i++) {
 			if (chars[i].isPlayer) {
 				finded = chars[i];
@@ -1157,7 +1162,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public static ICharacter GetByName (string name) {
 		ICharacter finded = null;
-		ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter>();
+		ICharacter[] chars = charactersAll.ToArray();
 		for (int i = 0; i < chars.Length; i++) {
 			if (chars[i].status.name == name) {
 				finded = chars[i];
@@ -1172,7 +1177,7 @@ public class ICharacter : MonoBehaviour
 		} else {
 			AI_Update ();
 		}
-		if (!(status.health > 0)) {
+		if (dead) {
 			Die();
 		}
 	}
@@ -1194,7 +1199,7 @@ public class ICharacter : MonoBehaviour
 	public ICharacter canTalk {
 		get
 		{
-			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
+			ICharacter[] chars = charactersAll.ToArray();
 			ICharacter finded = null;
 			float dist = 1.5f;
 
@@ -1233,7 +1238,9 @@ public class ICharacter : MonoBehaviour
 			float asp = (10f / (status.speedness + status.strongness));
 			Invoke ("Attack_End", 2.5f + asp);
 			Animate ();
-			anims.Play ("Combat");
+			if (!dead) {
+				anims.Play ("Combat");
+			}
 			Stop ();
 			if (whom) {
 				lookVector = whom.trans.position;
@@ -1262,7 +1269,7 @@ public class ICharacter : MonoBehaviour
 		v = new Vector3 (v.x, trans.position.y, v.z);
 		v = v - trans.position;
 		Quaternion next = Quaternion.LookRotation (v);
-		trans.rotation = Quaternion.Slerp (trans.rotation, next, 0.2f);
+		trans.rotation = Quaternion.Slerp (trans.rotation, next, 0.4f);
 		if (Vector3.Angle (trans.forward, v) < 5) {
 			CancelInvoke ("LookToSettedDirection");
 		} else {
@@ -1291,14 +1298,33 @@ public class ICharacter : MonoBehaviour
 		}
 	}
 	private void Attack_SpetialDamage_Set (ICharacter whom) {
+		int procent = 0;
+		int rnd = 0;
+		int dmg = 0;
 		switch (status.iType) {
 		case IClassType.Monk:
-			int procent = 5 * status.level;
-			int rnd = UnityEngine.Random.Range (0, 100);
+			procent = 20 + 5 * status.level;
+			rnd = UnityEngine.Random.Range (0, 100);
 			if (rnd < procent) {
 				IDamageType type = (IDamageType)UnityEngine.Random.Range (0, 5);
-				int dmg = status.damage_melee;
+				dmg = status.damage_melee;
 				whom.ApplyDamage (dmg, type);
+			}
+			break;
+		case IClassType.Inquisitor:
+			dmg = 3 * status.level;
+			procent = 25;
+			rnd = UnityEngine.Random.Range (0, 100);
+			if (rnd < procent) {
+				whom.ApplyDamage (dmg, IDamageType.Fire);
+			}
+			break;
+		case IClassType.Palladin:
+			dmg = 5 * status.level;
+			procent = 15;
+			rnd = UnityEngine.Random.Range (0, 100);
+			if (rnd < procent) {
+				whom.ApplyDamage (dmg, IDamageType.Magic);
 			}
 			break;
 		}
@@ -1312,9 +1338,19 @@ public class ICharacter : MonoBehaviour
 					tacked.ApplyDamage (status.damage_melee, IDamageType.Melee);
 					Attack_SpetialDamage_Set (tacked);
 					if (!(IReputation.GetEnemity(tacked.status, status) > 1)) {
-						if (status.reputationType != IReputationType.Bandit &&
-							status.reputationType != IReputationType.Monster) {
+						switch (status.reputationType) {
+						case IReputationType.Bandit:
+							status.reputationType = IReputationType.Monster;
+							break;
+						case IReputationType.People:
 							status.reputationType = IReputationType.Bandit;
+							break;
+						case IReputationType.Cleric:
+							status.reputationType = IReputationType.People;
+							break;
+						case IReputationType.Mage:
+							status.reputationType = IReputationType.Monster;
+							break;
 						}
 					}
 				}
@@ -1342,7 +1378,9 @@ public class ICharacter : MonoBehaviour
 			Invoke ("EndReact", 1);
 		}
 		Animate ();
-		anims.Play ("Combat");
+		if (!dead) {
+			anims.Play ("Combat");
+		}
 		int app = status.ApplyDamage (damage, dmgType);
 		Color clr = Color.yellow;
 		switch (dmgType) {
@@ -1396,6 +1434,14 @@ public class ICharacter : MonoBehaviour
 		anims.SetFloat ("Combat", combat);
 		weaponImage.texture = IItemAsset.LoadTexture (status.weapon);
 	}
+
+	public bool dead
+	{
+		get {
+			return !(status.health > 0);
+		}
+	}
+
 	public void UseGameObject (IUsable usable) {
 		if (usable) {
 			if (usable is IItemObject) {
@@ -1411,6 +1457,9 @@ public class ICharacter : MonoBehaviour
 	}
 	public void OpenDoor (IDoor door) {
 		door.Use (this);
+	}
+	public void OnDestroy () {
+		charactersAll.Remove (this);
 	}
 	public void Die () {
 		anims.Play ("Death");
@@ -1443,7 +1492,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public ICharacter GetNearestEnemy () {
 		ICharacter finded = null;
-		ICharacter[] all = ICharacter.FindObjectsOfType<ICharacter> ();
+		ICharacter[] all = charactersAll.ToArray();
 		float dist = 15;
 		for (int i = 0; i < all.Length; i++) {
 			float dist_cur = (all [i].trans.position - trans.position).magnitude;
@@ -1457,7 +1506,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public static ICharacter GetNearestFromPoint (Vector3 point, ICharacter mask, float maxDist) {
 		ICharacter finded = null;
-		ICharacter[] all = ICharacter.FindObjectsOfType<ICharacter> ();
+		ICharacter[] all = charactersAll.ToArray();
 		float dist = maxDist;
 		for (int i = 0; i < all.Length; i++) {
 			float dist_cur = (all [i].trans.position - point).magnitude;
@@ -1470,7 +1519,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public static ICharacter[] GetNearestFromPointAll (Vector3 point, ICharacter mask, float maxDist) {
 		List<ICharacter> chars = new List<ICharacter> ();
-		ICharacter[] all = ICharacter.FindObjectsOfType<ICharacter> ();
+		ICharacter[] all = charactersAll.ToArray();
 		float dist = maxDist;
 		for (int i = 0; i < all.Length; i++) {
 			float dist_cur = (all [i].trans.position - point).magnitude;
@@ -1499,7 +1548,9 @@ public class ICharacter : MonoBehaviour
 				lookVector = point;
 				Invoke ("Spell_End", 1.5f);
 				Animate ();
-				anims.Play ("Combat");
+				if (!dead) {
+					anims.Play ("Combat");
+				}
 			}
 		}
 	}

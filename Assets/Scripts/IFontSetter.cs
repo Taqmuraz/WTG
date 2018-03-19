@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [System.Serializable]
-public class DebugMessage
+public struct DebugMessage
 {
-	public string message = "";
-	public IColor color = Color.white;
+	public string message;
+	public IColor color;
 
 	public DebugMessage (string msg, Color clr) {
 		message = msg;
@@ -22,7 +22,7 @@ public class MyDebug
 	public static void Log (string log, Color color, ICharacter obj) {
 		string a = "(" + obj.status.characterName + ") ";
 		messages.Add (new DebugMessage(a + log, color));
-		if (messages.Count > 15) {
+		if (messages.Count > 3) {
 			messages.RemoveAt (0);
 		}
 		haveToUpdate = true;

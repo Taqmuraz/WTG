@@ -1,8 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 
 public class IItemObject : IUsable {
+
+	public static List<IItemObject> itemObjectsAll = new List<IItemObject> ();
 
 	public int indentification;
 
@@ -17,6 +20,13 @@ public class IItemObject : IUsable {
 
 	private void Start () {
 		trans = transform;
+		itemObjectsAll.Add (this);
+		usablesAll.Add (this);
+	}
+
+	public void OnDestroy () {
+		itemObjectsAll.Remove (this);
+		IUsable.usablesAll.Remove (this);
 	}
 
 	public void SetWithID () {

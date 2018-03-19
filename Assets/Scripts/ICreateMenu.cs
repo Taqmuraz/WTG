@@ -93,7 +93,10 @@ public class ICreateMenu : MonoBehaviour {
 			status.iType = IClassType.Monk;
 		}
 		IControl.SetTextWithScales (classInfo, classesTexts [(int)status.iType - 1].text);
-		IControl.SetTextWithScales (raceInfo, racesTexts [(int)status.iRace].text);
+		IStatus n = new IStatus ();
+		n.iRace = status.iRace;
+		n.iType = IClassType.Simple;
+		IControl.SetTextWithScales (raceInfo, racesTexts [(int)status.iRace].text + '\n' + '\n' + n.immunity.ToText ());
 
 		dollView.texture = (Texture)Resources.Load ("Runtime/RenderTextures/SelectionCamera");
 

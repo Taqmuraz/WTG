@@ -93,7 +93,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 	public float deathTime = 0;
 
-	public RectTransform messagesParent;
+	public Text messagesText;
 
 	public enum IGameMenuState
 	{
@@ -225,9 +225,10 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 	private void InterfaceMotor () {
 
-		if (MyDebug.haveToUpdate) {
-			FillMessages (messagesParent, MyDebug.messages.ToArray ());
+		if (MyDebug.haveToUpdate && MyDebug.messages.Count > 0) {
+			SetTextWithScales (messagesText, MyDebug.messages[MyDebug.messages.Count - 1].message);
 			MyDebug.haveToUpdate = false;
+			messagesText.color = MyDebug.messages [MyDebug.messages.Count - 1].color;
 		}
 
 		bool sp = character.status.canUseRunes;

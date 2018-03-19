@@ -6,12 +6,15 @@ public class IUsable : MonoBehaviour {
 
 	public Transform trans;
 
+	public static List<IUsable> usablesAll = new List<IUsable> ();
+
 	private void Start () {
 		trans = transform;
+		usablesAll.Add (this);
 	}
 
 	public static IUsable GetNearestToPosition (Vector3 point) {
-		IUsable[] usables = IUsable.FindObjectsOfType<IUsable> ();
+		IUsable[] usables = IUsable.usablesAll.ToArray ();
 		IUsable usable = null;
 
 		float dist = 2;

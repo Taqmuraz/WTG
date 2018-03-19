@@ -7,6 +7,12 @@ public class IChest : IDoor {
 	private void Start () {
 		isChest = true;
 		trans = transform;
+		IDoor.doorsAll.Add (this);
+		usablesAll.Add (this);
+	}
+	private void OnDestroy () {
+		usablesAll.Remove (this);
+		doorsAll.Remove (this);
 	}
 	public int GetItemByID (int id) {
 		int index = -1;
