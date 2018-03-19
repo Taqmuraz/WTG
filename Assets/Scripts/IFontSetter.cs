@@ -47,7 +47,7 @@ public class IFontSetter : MonoBehaviour {
 
 	private static IFontSetter setter;
 
-	private void Update () {
+	private void FontUpdate () {
 		SetFontForall ();
 	}
 

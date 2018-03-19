@@ -108,7 +108,17 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		Loot
 	}
 
-	public IGameMenuState state;
+	public IGameMenuState state
+	{
+		get {
+			return st;
+		}
+		set {
+			st = value;
+			IFontSetter.SetFontForall ();
+		}
+	}
+	private IGameMenuState st;
 
 	public void SetState () {
 		runtimeObj.SetActive (state == IGameMenuState.Runtime);
@@ -191,6 +201,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		}
 	}
 	public static void SetTextWithScales (Text t, string msg) {
+		IFontSetter.SetFont (t);
 		RectTransform trans = t.rectTransform;
 		TextGenerationSettings s = t.GetGenerationSettings (trans.rect.size);
 		float slotSize = t.cachedTextGenerator.GetPreferredHeight(msg, s);
@@ -223,14 +234,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		}
 		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, endSize + 15);
 	}
-	private void InterfaceMotor () {
-
-		if (MyDebug.haveToUpdate && MyDebug.messages.Count > 0) {
-			SetTextWithScales (messagesText, MyDebug.messages[MyDebug.messages.Count - 1].message);
-			MyDebug.haveToUpdate = false;
-			messagesText.color = MyDebug.messages [MyDebug.messages.Count - 1].color;
-		}
-
+	private void InterfaceMinUpdate () {
 		bool sp = character.status.canUseRunes;
 
 		spellButton.enabled = character.status.rune > -1 && sp;
@@ -252,6 +256,30 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				path = path + "Active";
 			}
 			armorStats[i].texture = (Texture)Resources.Load(path);
+		}
+
+		int[] items = character.status.items;
+
+		bool cur = currentLookableItemIndex > -1 && currentLookableItemIndex < items.Length;
+
+		inventoryFunctionsLabel.SetActive (cur);
+
+		if (cur) {
+			IItem current = IItemAsset.items [items [currentLookableItemIndex]];
+			string t = current.Info ();
+			SetTextWithScales (itemsInfo, t);
+		} else {
+			SetTextWithScales (itemsInfo, "-");
+		}
+	}
+	private void InterfaceMotor () {
+
+		bool haveToMinUpdate = false;
+
+		if (MyDebug.haveToUpdate && MyDebug.messages.Count > 0) {
+			SetTextWithScales (messagesText, MyDebug.messages[MyDebug.messages.Count - 1].message);
+			MyDebug.haveToUpdate = false;
+			messagesText.color = MyDebug.messages [MyDebug.messages.Count - 1].color;
 		}
 
 		if (state != IGameMenuState.Runtime) {
@@ -334,6 +362,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			});
 
 			currentItems = items;
+			haveToMinUpdate = true;
 		}
 
 
@@ -354,20 +383,13 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			});
 
 			probeIndexLookable = currentLookableItemIndex;
+
+			haveToMinUpdate = true;
 		}
 
-		bool cur = currentLookableItemIndex > -1 && currentLookableItemIndex < items.Length;
 
-		inventoryFunctionsLabel.SetActive (cur);
-
-
-
-		if (cur) {
-			IItem current = IItemAsset.items [items [currentLookableItemIndex]];
-			string t = current.Info ();
-			SetTextWithScales (itemsInfo, t);
-		} else {
-			SetTextWithScales (itemsInfo, "-");
+		if (haveToMinUpdate) {
+			InterfaceMinUpdate ();
 		}
 	}
 	public void Quit () {
@@ -509,7 +531,9 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			if (upd[i].count > 1) {
 				num = "(" + upd [i].count + ")";
 			}
-			trans.GetComponentInChildren<Text>().text = IItemAsset.items[upd[i].id].name + num;
+			Text t = trans.GetComponentInChildren<Text> ();
+			IFontSetter.SetFont (t);
+			t.text = IItemAsset.items[upd[i].id].name + num;
 
 			trans.SetSizeWithCurrentAnchors (RectTransform.Axis.Horizontal, parent.rect.width);
 			Button bt = trans.GetComponent<Button>();

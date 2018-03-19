@@ -68,6 +68,7 @@ public class IMainMenu : MonoBehaviour {
 			int v = 11 + (int)(fontSize.value * 15);
 			fontSize.GetComponentInChildren<Text>().text = "Размер шрифта : " + v;
 			settings.fontSize = v;
+			IFontSetter.SetFontForall();
 		});
 
 		removeButton.onClick.RemoveAllListeners ();
