@@ -121,6 +121,18 @@ public class Location
 		objects = objs;
 		locationName = name;
 	}
+	public void AddObject (ISaveble obj) {
+		List<ISaveble> objs = new List<ISaveble> ();
+		objs.AddRange (objects);
+		objs.Add (obj);
+		objects = objs.ToArray ();
+	}
+	public void RemoveObject (ISaveble obj) {
+		List<ISaveble> objs = new List<ISaveble> ();
+		objs.AddRange (objects);
+		objs.Remove (obj);
+		objects = objs.ToArray ();
+	}
 }
 [System.Serializable]
 public class Settings
@@ -152,6 +164,8 @@ public class IGame
 	public string currentLocationName = "Arena";
 
 	public DateTime date = new DateTime();
+
+	public IVector cameraEuler;
 
 	public static bool isNew
 	{
@@ -192,10 +206,14 @@ public class IGame
 	}
 
 	public void MoveToLocation (string locationName) {
+		CaptureGame ();
+		ISaveble player = FindByName ("Player");
+		currentLocation.RemoveObject (player);
 		currentLocationName = locationName;
-		if (this.locations[currentLocationName] == null) {
+		if (!this.locations.ContainsKey(currentLocationName)) {
 			this.locations.Add (currentLocationName, new Location (new ISaveble[0], currentLocationName));
 		}
+		currentLocation.AddObject (player);
 		currentLocation.hasBeenHere = true;
 	}
 
@@ -276,10 +294,11 @@ public class IGame
 		for (int i = 0; i < doors.Length; i++) {
 			savs.Add (doors [i].data);
 		}
-
+		Debug.Log (IGame.buffer.currentLocationName);
 		IGame.buffer.locations [IGame.buffer.currentLocationName].objects = savs.ToArray ();
 		IGame.buffer.date = DateTime.Now;
 		IGame.buffer.progress = IQuest.current;
+		IGame.buffer.cameraEuler = (Vector3)IControl.control.cameraEuler;
 		IGame.buffer.currentLocation.hasBeenHere = true;
 	}
 }
@@ -1115,38 +1134,6 @@ public class ICharacter : MonoBehaviour
 			IStatusSinhro ();
 		} catch (Exception ex) {
 			MyDebug.Log (ex.Message, Color.red, this);
-		}
-	}
-	private void DrawStats () {
-		string health = "Без ранений";
-		if (status.health < status.maxHealth * 0.75f) {
-			health = "Слабые ранения";
-		}
-		if (status.health < status.maxHealth / 2) {
-			health = "Сильные ранения";
-		}
-		if (status.health < status.maxHealth / 4) {
-			health = "При смерти";
-		}
-		Vector3 pos = IControl.camMain.WorldToScreenPoint (trans.position + Vector3.up * 4);
-		Rect rect = new Rect (pos.x - 50, Screen.height - (pos.y - 25), 100, 50);
-		GUI.skin.label.alignment = TextAnchor.UpperCenter;
-		Color c = Color.green;
-		if (IControl.character) {
-			int en = IReputation.GetEnemity (status, IControl.character.status);
-			if (en > 0) {
-				c = Color.yellow;
-			}
-			if (en > 1) {
-				c = Color.red;
-			}
-		}
-		GUI.color = c;
-		GUI.Label (rect, status.characterName + '\n' + health);
-	}
-	private void OnGUI () {
-		if (IControl.control.state == IControl.IGameMenuState.Runtime) {
-			DrawStats ();
 		}
 	}
 	public static ICharacter GetPlayer () {

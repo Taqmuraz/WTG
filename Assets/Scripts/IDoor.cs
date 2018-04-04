@@ -40,6 +40,12 @@ public class IDoor : IUsable {
 		DoorStart ();
 		doorsAll.Add (this);
 		usablesAll.Add (this);
+		NavMeshObstacle obs = GetComponent<NavMeshObstacle> ();
+		BoxCollider coll = gameObject.AddComponent<BoxCollider> ();
+		coll.center = obs.center;
+		coll.size = obs.size;
+		gameObject.layer = LayerMask.NameToLayer ("Door");
+		SetStateNow ();
 	}
 
 	private void OnDestroy () {
@@ -82,7 +88,6 @@ public class IDoor : IUsable {
 	}
 	public void OpenOrClose () {
 		data.opened = !data.opened;
-		SetState ();
 	}
 	public void SetState () {
 		int a = 0;
@@ -90,9 +95,28 @@ public class IDoor : IUsable {
 			a = 1;
 		}
 		if (!vertical) {
-			trans.localEulerAngles = startEuler + Vector3.forward * 90 * a;
+			Quaternion rot = Quaternion.Euler ((startEuler + Vector3.forward * 90 * a));
+			trans.localRotation = Quaternion.Slerp (trans.localRotation, rot, Time.fixedDeltaTime * 4);
 		} else {
-			trans.localPosition = startPosition - Vector3.up * 3 * a;
+			Vector3 pos = startPosition - Vector3.up * 3 * a;
+			trans.localPosition = Vector3.Slerp (trans.localPosition, pos, Time.fixedDeltaTime * 4);
+		}
+	}
+	private void SetStateNow () {
+		int a = 0;
+		if (data.opened) {
+			a = 1;
+		}
+		if (!vertical) {
+			trans.localRotation = Quaternion.Euler ((startEuler + Vector3.forward * 90 * a));
+		} else {
+			Vector3 pos = startPosition - Vector3.up * 3 * a;
+			trans.localPosition = pos;
+		}
+	}
+	private void FixedUpdate () {
+		if (!(this is IChest)) {
+			SetState ();
 		}
 	}
 }

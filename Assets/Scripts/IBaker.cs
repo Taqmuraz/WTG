@@ -6,6 +6,7 @@ public class IBaker : MonoBehaviour {
 	public Transform playerSpawn;
 
 	private void Start () {
+		IControl.control.cameraEuler = (Vector2)(Vector3)IGame.buffer.cameraEuler;
 		if (IGame.isNew) {
 			InstantiatePlayer((IStatus)IGame.buffer.FindByName ("Player"));
 			SetIndexesForDoors ();

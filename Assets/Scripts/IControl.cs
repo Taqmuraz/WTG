@@ -22,6 +22,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public RectTransform joyPanel;
 	public RectTransform joyStick;
 	public static Transform cam;
+	public static Transform camParent;
 	public static Camera camMain;
 	public RectTransform healthBar;
 
@@ -92,6 +93,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public Text characterInfoText;
 
 	public float deathTime = 0;
+	public Vector2 cameraEuler;
 
 	public Text messagesText;
 
@@ -410,21 +412,39 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		ISpace.LoadGameFromIndex (IGame.currentProfile);
 	}
 	private void CameraMotor () {
-		cam.eulerAngles = new Vector3 (45, 45, 0);
-		Ray ray = new Ray (character.trans.position + Vector3.up, -cam.forward);
-		Vector3 point = ray.GetPoint (100);
-		cam.position = Vector3.Slerp(cam.position, point, Time.fixedDeltaTime * 5);
+		Vector2 v = ICameraDragPanel.dragVector;
+
+		cameraEuler += new Vector2 (-v.y, v.x) * Time.fixedDeltaTime * 15;
+
+		ICameraDragPanel.dragVector = Vector2.zero;
+
+		cameraEuler.x = Mathf.Clamp (cameraEuler.x, -89, 89);
+		camParent.rotation = Quaternion.Slerp(camParent.rotation, Quaternion.Euler((Vector3)cameraEuler), Time.fixedDeltaTime * 7);
+
+		camParent.position = character.trans.position + Vector3.up;
+		Ray ray = new Ray (camParent.position, -camParent.forward);
+
+		Vector3 dop = Vector3.zero;
+		float dist = 3;
+		RaycastHit hit;
+		if (Physics.Raycast(ray, out hit, dist)) {
+			dist = hit.distance;
+			dop = hit.normal * 0.2f;
+		}
+
+		dop = cam.InverseTransformDirection (dop);
+
+		cam.localPosition = Vector3.Slerp(cam.localPosition, -Vector3.forward * dist + dop, Time.fixedDeltaTime * 7);
 	}
 	private void PrepareCamera () {
-		cam.eulerAngles = new Vector3 (45, 45, 0);
-		Ray ray = new Ray (IGame.buffer.FindByName("Player").position + Vector3.up, -cam.forward);
-		Vector3 point = ray.GetPoint (100);
-		cam.position = point;
+		camParent.eulerAngles = IGame.buffer.cameraEuler;
+		cam.localPosition = -Vector3.forward * 3;
 		camMain = cam.GetComponent<Camera> ();
 	}
 	private void Awake () {
 		control = this;
 		cam = Camera.main.transform;
+		camParent = cam.parent;
 	}
 	public void UseItem (int index) {
 		if (character.status.CanUseItem(character.status.items[index])) {
@@ -673,6 +693,9 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 					PrepareLootItems ((IChest)us);
 					state = IGameMenuState.Loot;
 					SetState ();
+				}
+				if (us is ILocationTransition) {
+					((ILocationTransition)us).Use ();
 				}
 			}
 		}

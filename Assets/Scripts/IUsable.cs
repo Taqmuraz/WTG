@@ -23,7 +23,7 @@ public class IUsable : MonoBehaviour {
 
 		for (int i = 0; i < usables.Length; i++) {
 			float d = (usables[i].trans.position - point).magnitude;
-			bool p = Physics.Linecast (point + Vector3.up, usables [i].trans.position + Vector3.up);
+			bool p = Physics.Linecast (point + Vector3.up, usables [i].trans.position + Vector3.up, LayerMask.GetMask("Default"));
 			if (d < dist && !p) {
 				dist = d;
 				index = i;
