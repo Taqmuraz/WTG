@@ -57,7 +57,7 @@ public class IFontSetter : MonoBehaviour {
 	}
 
 	public static void SetFontForall () {
-		Text[] texts = Text.FindObjectsOfType<Text> ();
+		Text[] texts = Resources.FindObjectsOfTypeAll<Text> ();
 
 		for (int i = 0; i < texts.Length; i++) {
 			SetFont (texts [i]);

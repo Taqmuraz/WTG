@@ -24,6 +24,7 @@ public class IScreenshotCamera : MonoBehaviour {
 			IGame.screenshot = tex.EncodeToPNG ();
 			captureShot = false;
 		}
+		IControl.control.CameraMotor ();
 	}
 
 	public void Screenshot () {

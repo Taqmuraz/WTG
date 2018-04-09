@@ -65,6 +65,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public Text answer;
 
 	public Button runtimeUse;
+	Text rut;
 	Image rui;
 	public Button runtimeTalk;
 	public IDragButton runtimeAttack;
@@ -94,6 +95,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 	public float deathTime = 0;
 	public Vector2 cameraEuler;
+	private bool useCheck = false;
 
 	public Text messagesText;
 
@@ -162,7 +164,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		dialog_window.parent = parent;
 		dialog_window.control = this;
 		dialogPortait.texture = ITextureDrawer.GetFromPerson (with.status);
-		CameraMotor ();
 		dialog_window.InitializeNode ();
 
 		//dialog_window.PrepareStage ();
@@ -198,9 +199,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		healthBar.SetSizeWithCurrentAnchors (RectTransform.Axis.Horizontal, 60 + (((float)character.status.health / (float)character.status.maxHealth) * 100) * 2);
 	}
 	private void FixedUpdate () {
-		if (character) {
-			CameraMotor ();
-		}
+		// fixed
 	}
 	public static void SetTextWithScales (Text t, string msg) {
 		IFontSetter.SetFont (t);
@@ -274,6 +273,22 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			SetTextWithScales (itemsInfo, "-");
 		}
 	}
+	private void CheckUse (IUsable can) {
+		if (!rui || !rut) {
+			rui = runtimeUse.image;
+			rut = runtimeUse.GetComponentInChildren<Text> ();
+		}
+		if (rui) {
+			rui.enabled = can;
+		}
+		if (rut) {
+			rut.enabled = can;
+			if (can) {
+				rut.text = IUsable.GetUseText (can);
+			}
+		}
+		useCheck = (can != null);
+	}
 	private void InterfaceMotor () {
 
 		bool haveToMinUpdate = false;
@@ -287,10 +302,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		if (state != IGameMenuState.Runtime) {
 			drag = false;
 		}
-
-		if (!rui) {
-			rui = runtimeUse.image;
-		}
 		if (!toGameImage) {
 			toGameImage = toGame.image;
 		}
@@ -299,7 +310,11 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 		toGameImage.enabled = (state != IGameMenuState.Runtime && state != IGameMenuState.Dialog);
 
-		rui.enabled = character.canUse;
+		IUsable can = character.canUse;
+
+		if (useCheck != (can != null)) {
+			CheckUse (can);
+		}
 
 		int[] items = character.status.items;
 		//float delta = Mathf.Abs(slotsParent.rect.height - slotsMask.rect.height);
@@ -411,33 +426,54 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public void ReloadSaved () {
 		ISpace.LoadGameFromIndex (IGame.currentProfile);
 	}
-	private void CameraMotor () {
-		Vector2 v = ICameraDragPanel.dragVector;
-
-		cameraEuler += new Vector2 (-v.y, v.x) * Time.fixedDeltaTime * 15;
-
-		ICameraDragPanel.dragVector = Vector2.zero;
-
-		cameraEuler.x = Mathf.Clamp (cameraEuler.x, -89, 89);
-		camParent.rotation = Quaternion.Slerp(camParent.rotation, Quaternion.Euler((Vector3)cameraEuler), Time.fixedDeltaTime * 7);
-
-		camParent.position = character.trans.position + Vector3.up;
-		Ray ray = new Ray (camParent.position, -camParent.forward);
-
-		Vector3 dop = Vector3.zero;
-		float dist = 3;
-		RaycastHit hit;
-		if (Physics.Raycast(ray, out hit, dist)) {
-			dist = hit.distance;
-			dop = hit.normal * 0.2f;
+	public static Vector3 headHeight
+	{
+		get
+		{
+			return Vector3.up * 1.6f;
 		}
+	}
+	public static Vector3 cameraHead {
+		get {
+			Vector3 h = Vector3.zero;
+			if (control && character) {
+				h = character.agent.nextPosition + headHeight;
+			}
+			return h;
+		}
+	}
+	public void CameraMotor () {
+		if (character && character.agent) {
+			Vector2 v = ICameraDragPanel.dragVector;
 
-		dop = cam.InverseTransformDirection (dop);
+			cameraEuler += new Vector2 (-v.y, v.x) * Time.fixedDeltaTime * 15;
 
-		cam.localPosition = Vector3.Slerp(cam.localPosition, -Vector3.forward * dist + dop, Time.fixedDeltaTime * 7);
+			ICameraDragPanel.dragVector = Vector2.zero;
+
+			Vector3 campos = cameraHead;
+
+			cameraEuler.x = Mathf.Clamp (cameraEuler.x, -89, 89);
+			camParent.rotation = Quaternion.Slerp(camParent.rotation, Quaternion.Euler((Vector3)cameraEuler), Time.fixedDeltaTime * 7);
+
+			camParent.position = Vector3.Slerp (camParent.position, campos, Time.fixedDeltaTime * 7);
+			Ray ray = new Ray (camParent.position, -camParent.forward);
+
+			Vector3 dop = Vector3.zero;
+			float dist = 3;
+			RaycastHit hit;
+			if (Physics.Raycast(ray, out hit, dist)) {
+				dist = hit.distance;
+				dop = hit.normal * 0.2f;
+			}
+
+			dop = cam.InverseTransformDirection (dop);
+
+			cam.localPosition = Vector3.Slerp(cam.localPosition, -Vector3.forward * dist + dop, Time.fixedDeltaTime * 7);
+		}
 	}
 	private void PrepareCamera () {
 		camParent.eulerAngles = IGame.buffer.cameraEuler;
+		camParent.position = (Vector3)IGame.buffer.FindByName("Player").position + Vector3.up * 1.6f;
 		cam.localPosition = -Vector3.forward * 3;
 		camMain = cam.GetComponent<Camera> ();
 	}
@@ -464,7 +500,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 	public void Attack () {
 		if (character) {
-			character.AttackFromDirection ();
+			character.AttackFromDirection (IVector.FlatAndNormallize (cam.forward));
 		}
 	}
 	private IChest lootableChest;
@@ -682,6 +718,8 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		PrepareCamera ();
 
 
+		CheckUse (null);
+
 		SetState ();
 	}
 	private void UseRuntime () {
@@ -693,9 +731,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 					PrepareLootItems ((IChest)us);
 					state = IGameMenuState.Loot;
 					SetState ();
-				}
-				if (us is ILocationTransition) {
-					((ILocationTransition)us).Use ();
 				}
 			}
 		}

@@ -8,9 +8,9 @@ public class IBaker : MonoBehaviour {
 	private void Start () {
 		IControl.control.cameraEuler = (Vector2)(Vector3)IGame.buffer.cameraEuler;
 		if (IGame.isNew) {
-			InstantiatePlayer((IStatus)IGame.buffer.FindByName ("Player"));
+			//InstantiatePlayer((IStatus)IGame.buffer.FindByName ("Player"));
 			SetIndexesForDoors ();
-			IQuest.current = IQuest.GetStart ();
+			//IQuest.current = IQuest.GetStart ();
 		} else {
 			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
 			for (int i = 0; i < chars.Length; i++) {
@@ -20,16 +20,16 @@ public class IBaker : MonoBehaviour {
 			for (int i = 0; i < ios.Length; i++) {
 				Destroy (ios[i].gameObject);
 			}
-			for (int i = 0; i < IGame.buffer.currentLocation.objects.Length; i++) {
-				if (IGame.buffer.currentLocation.objects[i] is IStatus) {
-					InstantiatePlayer((IStatus)IGame.buffer.currentLocation.objects[i]);
-				}
-				if (IGame.buffer.currentLocation.objects[i] is ISavableItem) {
-					InstantiateItem((ISavableItem)IGame.buffer.currentLocation.objects[i]);
-				}
-				if (IGame.buffer.currentLocation.objects[i] is IDoorSave) {
-					InitializeDoor ((IDoorSave)IGame.buffer.currentLocation.objects[i]);
-				}
+		}
+		for (int i = 0; i < IGame.buffer.currentLocation.objects.Length; i++) {
+			if (IGame.buffer.currentLocation.objects[i] is IStatus) {
+				InstantiatePlayer((IStatus)IGame.buffer.currentLocation.objects[i]);
+			}
+			if (IGame.buffer.currentLocation.objects[i] is ISavableItem) {
+				InstantiateItem((ISavableItem)IGame.buffer.currentLocation.objects[i]);
+			}
+			if (IGame.buffer.currentLocation.objects[i] is IDoorSave) {
+				InitializeDoor ((IDoorSave)IGame.buffer.currentLocation.objects[i]);
 			}
 		}
 	}

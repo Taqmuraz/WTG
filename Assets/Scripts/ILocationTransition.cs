@@ -18,8 +18,12 @@ public class ILocationTransition : IUsable {
 
 	public string nextLevel = "Arena";
 
-	public void Use () {
-		TransitLocation (nextLevel);
+	public void Use (ICharacter ch) {
+		if (ch.isPlayer) {
+			TransitLocation (nextLevel);
+		} else {
+			ch.status.MoveToLocation (ch.gameObject, nextLevel);
+		}
 	}
 
 	private void Start () {

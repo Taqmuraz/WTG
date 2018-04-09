@@ -45,8 +45,9 @@ public class IDoor : IUsable {
 		coll.center = obs.center;
 		coll.size = obs.size;
 		gameObject.layer = LayerMask.NameToLayer ("Door");
-		SetStateNow ();
 	}
+
+	private bool stateStartSetted = false;
 
 	private void OnDestroy () {
 		usablesAll.Remove (this);
@@ -90,6 +91,10 @@ public class IDoor : IUsable {
 		data.opened = !data.opened;
 	}
 	public void SetState () {
+		if (!stateStartSetted) {
+			SetStateNow ();
+			stateStartSetted = true;
+		}
 		int a = 0;
 		if (data.opened) {
 			a = 1;

@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine.UI;
 using UnityEngine.AI;
 using System;
+using System.Linq;
 
 [System.Serializable]
 public struct IColor
@@ -50,6 +51,44 @@ public struct IVector
 	public static implicit operator IVector (Vector3 v) {
 		return new IVector (v.x, v.y, v.z);
 	}
+	public static IVector operator * (IVector a, float b) {
+		return new IVector (a.x * b, a.y * b, a.z * b);
+	}
+	public static IVector operator / (IVector a, float b) {
+		return new IVector (a.x / b, a.y / b, a.z / b);
+	}
+	public static IVector operator + (IVector a, IVector b) {
+		return new IVector (a.x + b.x, a.y + b.y, a.z + b.z);
+	}
+	public static IVector operator - (IVector a, IVector b) {
+		return new IVector (a.x - b.x, a.y - b.y, a.z - b.z);
+	}
+	public static IVector Flat (IVector origin) {
+		return new IVector (origin.x, 0, origin.z);
+	}
+	public static IVector FlatAndNormallize (Vector3 origin) {
+		return Flat (origin).normallized;
+	}
+	public float magnitude
+	{
+		get {
+			return Mathf.Sqrt (x * x + y * y + z * z);
+		}
+	}
+	public IVector normallized
+	{
+		get
+		{
+			return this / magnitude;
+		}
+	}
+	public IVector flatten
+	{
+		get
+		{
+			return Flat (this);
+		}
+	}
 }
 [System.Serializable]
 public class ISaveble
@@ -71,6 +110,18 @@ public class ISaveble
 		}
 
 		return JsonUtility.ToJson (this);
+	}
+	public void MoveToLocation (GameObject obj, string nextLocation) {
+		foreach (var l in IGame.buffer.locations) {
+			l.Value.RemoveObject (this);
+		}
+		if (!IGame.buffer.HasLocation(nextLocation)) {
+			IGame.buffer.InitializeLocation (nextLocation);
+		}
+		IGame.buffer.locations [nextLocation].AddObject (this);
+		if (obj) {
+			GameObject.Destroy (obj);
+		}
 	}
 }
 /*[System.Serializable]
@@ -208,13 +259,20 @@ public class IGame
 	public void MoveToLocation (string locationName) {
 		CaptureGame ();
 		ISaveble player = FindByName ("Player");
-		currentLocation.RemoveObject (player);
+
 		currentLocationName = locationName;
-		if (!this.locations.ContainsKey(currentLocationName)) {
-			this.locations.Add (currentLocationName, new Location (new ISaveble[0], currentLocationName));
-		}
-		currentLocation.AddObject (player);
+
+		player.MoveToLocation (null, locationName);
+
 		currentLocation.hasBeenHere = true;
+	}
+
+	public bool HasLocation (string name) {
+		return locations.ContainsKey (name);
+	}
+
+	public void InitializeLocation (string name) {
+		locations.Add (name, new Location (new ISaveble[0], name));
 	}
 
 	public static void Save (IGame game, int index) {
@@ -763,13 +821,7 @@ public class IStatus : ISaveble
 		}
 	}
 	public bool HasItem (int id) {
-		bool has = false;
-		for (int i = 0; i < items.Length; i++) {
-			if (items[i] == id) {
-				has = true;
-				break;
-			}
-		}
+		bool has = items.Contains<int> (id);
 		return has;
 	}
 	public IClassType iType = IClassType.Simple;
@@ -1077,6 +1129,9 @@ public class ICharacter : MonoBehaviour
 		} else {
 			status.health = status.maxHealth;
 		}
+		/*if (!GetComponent<IShadowCaster> ()) {
+			gameObject.AddComponent<IShadowCaster> ();
+		}*/
 	}
 	public void PrepareRend () {
 		Renderer[] rends = GetComponentsInChildren<SkinnedMeshRenderer> ();
@@ -1180,7 +1235,11 @@ public class ICharacter : MonoBehaviour
 	{
 		get
 		{
-			return (IUsable.GetNearestToPosition (trans.position));
+			if (isPlayer) {
+				return (IUsable.GetNearestToPositionAndWithDirection (trans.position, IControl.cam.forward));
+			} else {
+				return (IUsable.GetNearestToPosition (trans.position));
+			}
 		}
 	}
 	public ICharacter canTalk {
@@ -1221,6 +1280,9 @@ public class ICharacter : MonoBehaviour
 
 			tacked = whom;
 			combatState = 5;
+			if (whom) {
+				lookVector = whom.trans.position;
+			}
 			Invoke ("Attack_Damage_Set", 0.5f);
 			float asp = (10f / (status.speedness + status.strongness));
 			Invoke ("Attack_End", 2.5f + asp);
@@ -1229,9 +1291,6 @@ public class ICharacter : MonoBehaviour
 				anims.Play ("Combat");
 			}
 			Stop ();
-			if (whom) {
-				lookVector = whom.trans.position;
-			}
 
 			//anims.Play ("Combat");
 		}
@@ -1244,11 +1303,13 @@ public class ICharacter : MonoBehaviour
 		}
 		set
 		{
-			l = value;
-			if (IsInvoking("LookToSettedDirection")) {
-				CancelInvoke ("LookToSettedDirection");
+			if (!inCombat) {
+				l = value;
+				if (IsInvoking("LookToSettedDirection")) {
+					CancelInvoke ("LookToSettedDirection");
+				}
+				LookToSettedDirection ();
 			}
-			LookToSettedDirection ();
 		}
 	}
 	private void LookToSettedDirection () {
@@ -1440,6 +1501,9 @@ public class ICharacter : MonoBehaviour
 			if (usable is IChest) {
 				// do someshing with chest
 			}
+			if (usable is ILocationTransition) {
+				((ILocationTransition)usable).Use (this);
+			}
 		}
 	}
 	public void OpenDoor (IDoor door) {
@@ -1518,7 +1582,9 @@ public class ICharacter : MonoBehaviour
 	}
 	public void AttackNearest (Vector3 point) {
 		ICharacter nearest = GetNearestFromPoint(point, this, 1.25f);
-
+		if (!nearest) {
+			lookVector = point;
+		}
 		Attack (nearest);
 	}
 	private void Spell_End () {
@@ -1543,6 +1609,9 @@ public class ICharacter : MonoBehaviour
 	}
 	public void AttackFromDirection () {
 		AttackNearest (trans.position + trans.forward);
+	}
+	public void AttackFromDirection (Vector3 direction) {
+		AttackNearest (trans.position + direction);
 	}
 	public void IStatusSinhro () {
 		if (lastArmor != status.armor) {
@@ -1641,8 +1710,7 @@ public class ICharacter : MonoBehaviour
 		}
 	}
 	public void RemoveItem (int index) {
-		List<int> ints = new List<int> ();
-		ints.AddRange (status.items);
+		List<int> ints = status.items.ToList<int> ();
 		ints.RemoveAt (index);
 		status.items = ints.ToArray ();
 	}
@@ -1654,7 +1722,7 @@ public class ICharacter : MonoBehaviour
 		Vector3 rr = UnityEngine.Random.onUnitSphere;
 
 		rp = new Vector3 (rp.x, 0, rp.z);
-		rr = new Vector3 (rr.x, 0, rr.z).normalized;
+		rr = new Vector3 (rr.x, 0, rr.z).normalized / 2;
 
 		prefab = Instantiate (prefab, trans.position + rp, Quaternion.LookRotation(rr));
 
@@ -1676,8 +1744,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public void AddItem (int id) {
 		if (id > -1) {
-			List<int> ints = new List<int> ();
-			ints.AddRange (status.items);
+			List<int> ints = status.items.ToList<int> ();
 			ints.Add (id);
 			status.items = ints.ToArray ();
 		}
