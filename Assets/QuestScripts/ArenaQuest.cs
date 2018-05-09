@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class IQuest_Arena : IQuest
+public class IQuest_Arena : SQuest
 {
 	public int enemy_index = 0;
 	public int enemy_defeated_index = -1;
@@ -25,17 +25,17 @@ public class ArenaQuest : MonoBehaviour {
 		get {
 			IQuest_Arena q = new IQuest_Arena ();
 			q.available = false;
-			for (int i = 0; i < IQuest.current.Length; i++) {
-				if (IQuest.current[i] is IQuest_Arena && IQuest.current[i].available && !IQuest.current[i].did) {
-					q = (IQuest_Arena)IQuest.current [i];
+			for (int i = 0; i < SQuest.current.Length; i++) {
+				if (SQuest.current[i] is IQuest_Arena && SQuest.current[i].available && !SQuest.current[i].did) {
+					q = (IQuest_Arena)SQuest.current [i];
 				}
 			}
 			return q;
 		}
 		set {
-			for (int i = 0; i < IQuest.current.Length; i++) {
-				if (IQuest.current[i] is IQuest_Arena) {
-					IQuest.current [i] = value;
+			for (int i = 0; i < SQuest.current.Length; i++) {
+				if (SQuest.current[i] is IQuest_Arena) {
+					SQuest.current [i] = value;
 				}
 			}
 		}
@@ -96,7 +96,7 @@ public class ArenaQuest : MonoBehaviour {
 								enemies [iquest.enemy_index].MoveTo (enemyPoint.position);
 							} else {
 								if ((main_character.trans.position - playerPoint.position).magnitude < 10) {
-									enemies [iquest.enemy_index].status.reputationType = IReputationType.Monster;
+									enemies [iquest.enemy_index].status.reputationType = ReputationType.Monster;
 									bothEntered = true;
 								}
 							}

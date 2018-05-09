@@ -29,7 +29,7 @@ public class ICreateMenu : MonoBehaviour {
 
 	public CreateMenuState state;
 
-	public IStatus status = new IStatus ();
+	public Status status = new Status (ClassType.Simple);
 
 	public static int slotIndex = 0;
 
@@ -62,7 +62,7 @@ public class ICreateMenu : MonoBehaviour {
 
 	public Button gender_male;
 	public Button gender_female;
-	public IStatus.Gender gender;
+	public Status.Gender gender;
 	public GameObject genderMenu;
 	public GameObject mainMenu;
 	public GameObject raceMaleButtons;
@@ -89,13 +89,12 @@ public class ICreateMenu : MonoBehaviour {
 		SetState ();
 	}
 	private void Update () {
-		if (status.iType == IClassType.Simple) {
-			status.iType = IClassType.Monk;
+		if (status.iType == ClassType.Simple) {
+			status.iType = ClassType.Monk;
 		}
 		IControl.SetTextWithScales (classInfo, classesTexts [(int)status.iType - 1].text);
-		IStatus n = new IStatus ();
+		Status n = new Status (ClassType.Simple);
 		n.iRace = status.iRace;
-		n.iType = IClassType.Simple;
 		IControl.SetTextWithScales (raceInfo, racesTexts [(int)status.iRace].text + '\n' + '\n' + n.immunity.ToText ());
 
 		dollView.texture = (Texture)Resources.Load ("Runtime/RenderTextures/SelectionCamera");
@@ -135,28 +134,28 @@ public class ICreateMenu : MonoBehaviour {
 	}
 
 	public void SaveAndPlay () {
-		IGame.buffer = new IGame (new ISaveble[1], IQuest.GetStart());
+		SGame.buffer = new SGame (new Saveble[1], SQuest.GetStart());
 		//status.items = IItemAsset.GetAllInventory ();
 		status.euler_y = 180f;
-		status.position = new IVector (-12, 0, -14.5f);
-		status.items = IItemAsset.GetStartKit (status);
+		status.position = new SVector (-12, 0, -14.5f);
+		status.items = ItemsAsset.GetStartKit (status);
 		status.SetSpellsTodayBy ();
-		IGame.buffer.currentLocation.objects [0] = status;
-		IGame.currentProfile = slotIndex;
+		SGame.buffer.currentLocation.objects [0] = status;
+		SGame.currentProfile = slotIndex;
 		ISpace.LoadLevel (3);
 	}
-	private void SetGender (IStatus.Gender g) {
+	private void SetGender (Status.Gender g) {
 		gender = g;
-		raceFemaleButtons.SetActive (g == IStatus.Gender.Female);
-		raceMaleButtons.SetActive (g == IStatus.Gender.Male);
+		raceFemaleButtons.SetActive (g == Status.Gender.Female);
+		raceMaleButtons.SetActive (g == Status.Gender.Male);
 		genderMenu.SetActive (false);
 		mainMenu.SetActive (true);
 		switch (gender) {
-		case IStatus.Gender.Female:
-			status.iRace = IRace.Angel;
+		case Status.Gender.Female:
+			status.iRace = Race.Angel;
 			break;
-		case IStatus.Gender.Male:
-			status.iRace = IRace.Human;
+		case Status.Gender.Male:
+			status.iRace = Race.Human;
 			break;
 		}
 		DollUpdate ();
@@ -220,14 +219,14 @@ public class ICreateMenu : MonoBehaviour {
 		gender_female.onClick.RemoveAllListeners ();
 		gender_female.onClick.AddListener (delegate {
 
-			SetGender(IStatus.Gender.Female);
+			SetGender(Status.Gender.Female);
 
 		});
 
 		gender_male.onClick.RemoveAllListeners ();
 		gender_male.onClick.AddListener (delegate {
 
-			SetGender(IStatus.Gender.Male);
+			SetGender(Status.Gender.Male);
 
 		});
 
@@ -273,7 +272,7 @@ public class ICreateMenu : MonoBehaviour {
 
 		for (int i = 0; i < races.Length; i++) {
 			races[i].onClick.RemoveAllListeners();
-			IRace cur = (IRace)i;
+			Race cur = (Race)i;
 			races[i].onClick.AddListener(delegate {
 
 
@@ -285,7 +284,7 @@ public class ICreateMenu : MonoBehaviour {
 		}
 		for (int i = 0; i < classes.Length; i++) {
 			classes[i].onClick.RemoveAllListeners();
-			IClassType cur = (IClassType)i + 1;
+			ClassType cur = (ClassType)i + 1;
 			classes[i].onClick.AddListener(delegate {
 				
 				status.iType = cur;
@@ -320,7 +319,7 @@ public class ICreateMenu : MonoBehaviour {
 			});
 		}
 
-		status.iType = IClassType.Monk;
+		status.iType = ClassType.Monk;
 
 		status.iPerson.cloth_color = colorArray [0];
 		status.iPerson.skin_color = skinColorsArray [0];
@@ -340,7 +339,7 @@ public class ICreateMenu : MonoBehaviour {
 
 	private void SetMaybeClasses () {
 		for (int i = 0; i < classes.Length; i++) {
-			if (!IStatus.MayBeNow (status.iRace, (IClassType)i + 1)) {
+			if (!Status.MayBeNow (status.iRace, (ClassType)i + 1)) {
 				classes [i].enabled = false;
 				classes [i].image.color = new Color(0.3f, 0.3f, 0.3f, 1);
 			} else {
@@ -349,9 +348,9 @@ public class ICreateMenu : MonoBehaviour {
 			}
 		}
 
-		IClassType[] may = IStatus.MayBe (status.iRace);
+		ClassType[] may = Status.MayBe (status.iRace);
 
-		if (!IStatus.MayBeNow(status.iRace, status.iType)) {
+		if (!Status.MayBeNow(status.iRace, status.iType)) {
 			status.iType = may [0];
 			ResetParams ();
 		}
@@ -413,7 +412,7 @@ public class ICreateMenu : MonoBehaviour {
 
 		paramsPoints = 5;
 	}
-	public static int[] GetMaximum (IClassType r) {
+	public static int[] GetMaximum (ClassType r) {
 		int[] ints = new int[6];
 
 		for (int i = 0; i < ints.Length; i++) {
@@ -421,7 +420,7 @@ public class ICreateMenu : MonoBehaviour {
 		}
 
 		switch (r) {
-		case IClassType.Antimage :
+		case ClassType.Antimage :
 			ints[0] = 7;
 			ints[1] = 4;
 			ints[2] = 6;
@@ -429,7 +428,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 4;
 			ints[5] = 7;
 			break;
-		case IClassType.Bard :
+		case ClassType.Thief :
 			ints[0] = 4;
 			ints[1] = 3;
 			ints[2] = 7;
@@ -437,7 +436,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 9;
 			ints[5] = 8;
 			break;
-		case IClassType.Cleric :
+		case ClassType.Cleric :
 			ints[0] = 5;
 			ints[1] = 9;
 			ints[2] = 6;
@@ -445,7 +444,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 9;
 			ints[5] = 5;
 			break;
-		case IClassType.DarknessSpirit :
+		case ClassType.DarknessSpirit :
 			ints[0] = 8;
 			ints[1] = 1;
 			ints[2] = 8;
@@ -453,7 +452,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 1;
 			ints[5] = 7;
 			break;
-		case IClassType.Inquisitor :
+		case ClassType.Inquisitor :
 			ints[0] = 8;
 			ints[1] = 8;
 			ints[2] = 2;
@@ -461,7 +460,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 8;
 			ints[5] = 7;
 			break;
-		case IClassType.Monk :
+		case ClassType.Monk :
 			ints[0] = 7;
 			ints[1] = 6;
 			ints[2] = 1;
@@ -469,7 +468,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 3;
 			ints[5] = 9;
 			break;
-		case IClassType.Palladin :
+		case ClassType.Palladin :
 			ints[0] = 9;
 			ints[1] = 6;
 			ints[2] = 8;
@@ -477,7 +476,7 @@ public class ICreateMenu : MonoBehaviour {
 			ints[4] = 9;
 			ints[5] = 9;
 			break;
-		case IClassType.Wonder :
+		case ClassType.Wonder :
 			ints[0] = 3;
 			ints[1] = 4;
 			ints[2] = 13;

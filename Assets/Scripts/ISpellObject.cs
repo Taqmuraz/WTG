@@ -54,20 +54,20 @@ public class ISpellObject : MonoBehaviour {
 
 	public void Activate () {
 
-		IDamageType dmgType = IDamageType.Magic;
+		DamageType dmgType = DamageType.Magic;
 
 		switch (spell.spellRune) {
 		case ISpellRune.Air:
-			dmgType = IDamageType.Air;
+			dmgType = DamageType.Air;
 			break;
 		case ISpellRune.Earth:
-			dmgType = IDamageType.Earth;
+			dmgType = DamageType.Earth;
 			break;
 		case ISpellRune.Fire:
-			dmgType = IDamageType.Fire;
+			dmgType = DamageType.Fire;
 			break;
 		case ISpellRune.Water:
-			dmgType = IDamageType.Water;
+			dmgType = DamageType.Water;
 			break;
 		}
 		
@@ -91,12 +91,7 @@ public class ISpellObject : MonoBehaviour {
 			break;
 		}
 		if (target && caster) {
-			if (!(IReputation.GetEnemity(target.status, caster.status) > 1)) {
-				if (caster.status.reputationType != IReputationType.Bandit &&
-					caster.status.reputationType != IReputationType.Monster) {
-					caster.status.reputationType = IReputationType.Bandit;
-				}
-			}
+			caster.status.SetDamageLawEvent (target.status);
 		}
 		//ISpell.SpellEffect (spell.spellRune, caster.status, trans.position);
 		DestroySpell ();

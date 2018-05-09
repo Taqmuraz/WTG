@@ -46,7 +46,7 @@ public class ITextureDrawer {
 		return ColorType.None;
 	}
 
-	public static Texture2D GetFromPerson (IStatus status) {
+	public static Texture2D GetFromPerson (Status status) {
 		Texture2D tex = (Texture2D)Resources.Load ("Sprites/Icons/" + status.iRace);
 		Texture2D toReturn = new Texture2D (tex.width, tex.height);
 		Color[] colors = tex.GetPixels ();

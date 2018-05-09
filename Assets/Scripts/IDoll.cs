@@ -21,7 +21,7 @@ public class IDoll : MonoBehaviour {
 		}
 	}
 
-	public void Set (IStatus status) {
+	public void Set (Status status) {
 
 		if (doll) {
 			Destroy (doll.gameObject);
@@ -45,9 +45,9 @@ public class IDoll : MonoBehaviour {
 		Renderer[] rends = GetComponentsInChildren<SkinnedMeshRenderer> ();
 
 		if (rends.Length > 2) {
-			IPersonView.SetToManyRenderer (status, rends);
+			PersonView.SetToManyRenderer (status, rends);
 		} else {
-			IPersonView.SetToRenderer (status, rend);
+			PersonView.SetToRenderer (status, rend);
 		}
 	}
 }

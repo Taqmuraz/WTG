@@ -22,9 +22,9 @@ public class ISpace : MonoBehaviour {
 		LoadLevel (0);
 	}
 	public static void LoadGameFromIndex (int gameIndex) {
-		if (IGame.Exist(gameIndex)) {
-			IGame.Load (gameIndex);
-			IGame.currentProfile = gameIndex;
+		if (SGame.Exist(gameIndex)) {
+			SGame.Load (gameIndex);
+			SGame.currentProfile = gameIndex;
 			ISpace.LoadLevel (3);
 		}
 	}
@@ -46,7 +46,7 @@ public class ISpace : MonoBehaviour {
 	private void Load () {
 		AsyncOperation op;
 		if (level > 2) {
-			string name = IGame.buffer.currentLocationName;
+			string name = SGame.buffer.currentLocationName;
 			op = SceneManager.LoadSceneAsync (name);
 		} else {
 			op = SceneManager.LoadSceneAsync (level);

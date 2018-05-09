@@ -27,7 +27,7 @@ public class IUsable : MonoBehaviour {
 			t = "Покинуть локацию";
 		}
 		if (toUse is IItemObject) {
-			t = IItemAsset.items [((IItemObject)toUse).indentification].name;
+			t = ItemsAsset.items [((IItemObject)toUse).indentification].name;
 		}
 
 		return t;
@@ -68,34 +68,16 @@ public class IUsable : MonoBehaviour {
 		IUsable usable = null;
 
 		float dist = 2;
-		float angle = 60;
+		float angle = 30;
 
 		Vector3 pos = point + IControl.headHeight;
 
-		foreach (var item in usables) {
-			if (item is IDoor) {
-				Debug.DrawLine (pos, item.position, Color.blue);
-			}
-			if (item is IChest) {
-				Debug.DrawLine (pos, item.position, Color.red);
-			}
-			if (item is IItemObject) {
-				Debug.DrawLine (pos, item.position, Color.green);
-			}
-			if (item is ILocationTransition) {
-				Debug.DrawLine (pos, item.position, Color.magenta);
-			}
-		}
-
-		usables = usables.Where ((IUsable arg) => ((arg.position - pos).magnitude) < dist &&
+		usable = usables.Where ((IUsable arg) => ((arg.position - pos).magnitude) < dist &&
 		Vector3.Angle ((arg.position - pos), direction) < angle
 		&&
 		!Physics.Linecast (pos, arg.position, LayerMask.GetMask ("Default")))
-			.OrderBy ((IUsable arg) => ((pos - point).magnitude)).OrderBy (
-			(IUsable arg) => Vector3.Angle ((arg.position - pos), direction)).ToArray ();
-		if (usables.Length > 0) {
-			usable = usables [0];
-		}
+			.OrderBy (
+			(IUsable arg) => Vector3.Angle ((arg.position - pos), direction)).FirstOrDefault ();
 
 		return usable;
 	}

@@ -15,15 +15,17 @@ public class IScreenshotCamera : MonoBehaviour {
 
 	private void OnPostRender () {
 		if (captureShot) {
-			int w = Screen.width;
-			int h = Screen.height;
+			int w = cam.pixelWidth;
+			int h = cam.pixelHeight;
 			Rect r = new Rect (0, 0, w, h);
 			Texture2D tex = new Texture2D((int)r.width, (int)r.height);
 			tex.ReadPixels (r, 0, 0);
 			tex.Apply ();
-			IGame.screenshot = tex.EncodeToPNG ();
+			SGame.screenshot = tex.EncodeToPNG ();
 			captureShot = false;
 		}
+	}
+	private void OnPreRender () {
 		IControl.control.CameraMotor ();
 	}
 

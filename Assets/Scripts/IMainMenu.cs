@@ -44,7 +44,7 @@ public class IMainMenu : MonoBehaviour {
 		ISpace.LoadLevel (1);
 	}
 	private void LoadGameFromSlot (int index) {
-		if (IGame.Exist(index)) {
+		if (SGame.Exist(index)) {
 			ISpace.LoadGameFromIndex (index);
 		}
 	}
@@ -56,7 +56,7 @@ public class IMainMenu : MonoBehaviour {
 		removeMenu.SetActive (false);
 	}
 	private void RemoveGame () {
-		IGame.Remove (toRemoveIndex);
+		SGame.Remove (toRemoveIndex);
 		toRemoveIndex = -1;
 	}
 	private int toRemoveIndex = -1;
@@ -93,7 +93,7 @@ public class IMainMenu : MonoBehaviour {
 
 			}
 			);
-			removeGame [i].gameObject.SetActive (IGame.Exist(index));
+			removeGame [i].gameObject.SetActive (SGame.Exist(index));
 		}
 
 		for (int i = 0; i < loadGame.Length; i++) {
@@ -108,16 +108,16 @@ public class IMainMenu : MonoBehaviour {
 
 			string st = "> Пусто <";
 
-			if (IGame.Exist(i)) {
-				IGame loaded = IGame.Load (i);
-				st = ((IStatus)loaded.FindByName ("Player")).characterName + " : " + loaded.date.ToLongDateString() + " " + loaded.date.ToLongTimeString();
+			if (SGame.Exist(i)) {
+				SGame loaded = SGame.Load (i);
+				st = ((Status)loaded.FindByName ("Player")).characterName + " : " + loaded.date.ToLongDateString() + " " + loaded.date.ToLongTimeString();
 			}
 
 			RawImage img = loadGame [i].GetComponentInChildren<RawImage> ();
-			if (IGame.Exist (i)) {
-				img.texture = IGame.LoadPicture (i);
+			if (SGame.Exist (i)) {
+				img.texture = SGame.LoadPicture (i);
 			} else {
-				img.texture = IItemAsset.LoadTexture (-1);
+				img.texture = ItemsAsset.LoadTexture (-1);
 			}
 
 			loadGame [i].GetComponentInChildren<Text> ().text = st;
@@ -137,7 +137,7 @@ public class IMainMenu : MonoBehaviour {
 		for (int i = 0; i < startNew.Length; i++) {
 			string text = "Новый персонаж";
 			startNew[i].onClick.RemoveAllListeners();
-			if (IGame.Exist (i)) {
+			if (SGame.Exist (i)) {
 				text = "Слот занят";
 			} else {
 				int index = i;

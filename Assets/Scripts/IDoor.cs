@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [System.Serializable]
-public class IDoorSave : ISaveble
+public class SDoorSave : Saveble
 {
 	public bool opened = false;
 	public bool locked = false;
@@ -17,7 +17,7 @@ public class IDoor : IUsable {
 
 	public static List<IDoor> doorsAll = new List<IDoor>();
 
-	public IDoorSave data;
+	public SDoorSave data;
 
 	private Vector3 startEuler;
 	private Vector3 startPosition;
@@ -61,11 +61,11 @@ public class IDoor : IUsable {
 			if (whom.status.HasItem (data.keyItemIndex)) {
 				data.locked = false;
 				OpenOrClose ();
-				string keyName = IItemAsset.items [data.keyItemIndex].name;
+				string keyName = ItemsAsset.items [data.keyItemIndex].name;
 				MyDebug.Log ("Дверь открыта, использован " + keyName, Color.green, whom);
 			} else {
 				if (data.keyItemIndex > -1) {
-					string keyName = IItemAsset.items [data.keyItemIndex].name;
+					string keyName = ItemsAsset.items [data.keyItemIndex].name;
 					MyDebug.Log ("Заперто, нужно найти " + keyName, Color.white, whom);
 				}
 			}

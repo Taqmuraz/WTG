@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Linq;
 
 public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
@@ -45,6 +46,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public GameObject runeMenuObj;
 	public GameObject characterMenuObj;
 	public GameObject lootMenuObj;
+	public GameObject skillMenuObj;
 
 	public Button toInventory;
 	public Button toGame;
@@ -61,7 +63,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public Button weapontInv;
 	public Button runeInv;
 
-	public RectTransform parent;
 	public Text answer;
 
 	public Button runtimeUse;
@@ -69,8 +70,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	Image rui;
 	public Button runtimeTalk;
 	public IDragButton runtimeAttack;
-
-	public RawImage spellButton;
 
 	[Header("Rune create menu")]
 	public Button rune_fire;
@@ -90,16 +89,22 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 	public RectTransform lootSlotsParent;
 	public RectTransform lootMineSlotsParent;
+	public RectTransform dialogButtonsParent;
+	public RectTransform skillButtonsParent;
+
+	public SkillButton[] skillButtons;
+	public SkillButton[] selectSkillButtons;
+	public Text skillInfo;
+	private int currentToSetSkill = 0;
 
 	public Text characterInfoText;
 
 	public float deathTime = 0;
 	public Vector2 cameraEuler;
-	private bool useCheck = false;
 
 	public Text messagesText;
 
-	public enum IGameMenuState
+	public enum GameMenuState
 	{
 		Runtime,
 		Pause,
@@ -109,41 +114,63 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		Screenshot,
 		RuneCreate,
 		CharacterInfo,
-		Loot
+		Loot,
+		Skills
 	}
 
-	public IGameMenuState state
+	public GameMenuState state
 	{
 		get {
 			return st;
 		}
 		set {
 			st = value;
+			SetState ();
 			IFontSetter.SetFontForall ();
 		}
 	}
-	private IGameMenuState st;
+	private GameMenuState st;
+
+	private bool stateChanged = false;
 
 	public void SetState () {
-		runtimeObj.SetActive (state == IGameMenuState.Runtime);
-		inventoryObj.SetActive (state == IGameMenuState.Inventory);
-		pauseObj.SetActive (state == IGameMenuState.Pause);
-		dialogObj.SetActive (state == IGameMenuState.Dialog);
-		deathMenuObj.SetActive (state == IGameMenuState.Death);
-		runeMenuObj.SetActive (state == IGameMenuState.RuneCreate);
-		characterMenuObj.SetActive (state == IGameMenuState.CharacterInfo);
-		lootMenuObj.SetActive (state == IGameMenuState.Loot);
+		runtimeObj.SetActive (state == GameMenuState.Runtime);
+		inventoryObj.SetActive (state == GameMenuState.Inventory);
+		pauseObj.SetActive (state == GameMenuState.Pause);
+		dialogObj.SetActive (state == GameMenuState.Dialog);
+		deathMenuObj.SetActive (state == GameMenuState.Death);
+		runeMenuObj.SetActive (state == GameMenuState.RuneCreate);
+		characterMenuObj.SetActive (state == GameMenuState.CharacterInfo);
+		lootMenuObj.SetActive (state == GameMenuState.Loot);
+		skillMenuObj.SetActive (state == GameMenuState.Skills);
 
-		if (state != IGameMenuState.Loot && lootableChest) {
+		if (state != GameMenuState.Loot && lootableChest) {
 			lootableChest = null;
 		}
-		if (state == IGameMenuState.CharacterInfo) {
+		if (state == GameMenuState.CharacterInfo) {
 			portait.texture = ITextureDrawer.GetFromPerson (character.status);
 		}
 
-		toGame.gameObject.SetActive (state != IGameMenuState.RuneCreate);
+		if (state == GameMenuState.Skills) {
+			InventorySlot[] slots = FillItemsTo<Skill> (skillButtonsParent, character.status.skills.forMyClass);
+			foreach (var item in slots) {
+				item.button.onClick.RemoveAllListeners ();
+				item.button.onClick.AddListener (delegate {
+					SetToQuickSkill(item.skill);
+				});
+			}
+			for (int i = 0; i < 3; i++) {
+				currentToSetSkill = i;
+				SetToQuickSkill (SkillSystem.GetByName(character.status.skills.quickSkills [i]));
+			}
+			currentToSetSkill = 0;
+		}
 
-		if (state != IGameMenuState.Runtime) {
+		stateChanged = true;
+
+		toGame.gameObject.SetActive (state != GameMenuState.RuneCreate);
+
+		if (state != GameMenuState.Runtime) {
 			Time.timeScale = 0;
 		} else {
 			Time.timeScale = 1;
@@ -152,16 +179,21 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		IFontSetter.SetFontForall ();
 	}
 
+	public void SetToQuickSkill (Skill skill) {
+		character.status.skills.quickSkills[currentToSetSkill] = skill.name;
+		SetTextWithScales (skillInfo, skill.Info ());
+		selectSkillButtons[currentToSetSkill].SetWithSkill(skill);
+	}
+
 	public void OutDialog () {
-		state = IGameMenuState.Runtime;
-		SetState ();
+		state = GameMenuState.Runtime;
 	}
 
 	public void ToDialog () {
 		ICharacter with = character.canTalk;
 		dialog_window.with = with;
 		dialog_window.for_answer = answer;
-		dialog_window.parent = parent;
+		dialog_window.parent = dialogButtonsParent;
 		dialog_window.control = this;
 		dialogPortait.texture = ITextureDrawer.GetFromPerson (with.status);
 		dialog_window.InitializeNode ();
@@ -170,15 +202,22 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 	public IDialogWindow dialog_window;
 
+
+	public void ToSkillsMenu () {
+		state = GameMenuState.Skills;
+	}
+
 	private bool drag = false;
 	bool probe = true;
 	public bool characterDead = false;
 
 	private void Update () {
+
+		TimeClass.time += Time.deltaTime * TimeClass.timeSpeed;
+
 		if (Time.time - deathTime > 5 && characterDead) {
-			if (state != IGameMenuState.Death) {
-				state = IGameMenuState.Death;
-				SetState ();
+			if (state != GameMenuState.Death) {
+				state = GameMenuState.Death;
 			}
 		}
 		if (!character) {
@@ -236,13 +275,24 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, endSize + 15);
 	}
 	private void InterfaceMinUpdate () {
-		bool sp = character.status.canUseRunes;
-
-		spellButton.enabled = character.status.rune > -1 && sp;
 
 		SetTextWithScales (characterInfoText, character.status.GetAllInfo ());
 
-		spellButton.texture = IItemAsset.LoadTexture (character.status.rune);
+		Skill[] skills = SkillSystem.GetFromNames(character.status.skills.quickSkills);
+
+		foreach (var item in skillButtons) {
+			item.onClick = delegate() {
+				return;
+			};
+			item.img.enabled = false;
+		}
+
+		for (int i = 0; i < skills.Length; i++) {
+			skillButtons [i].img.texture = skills [i].image;
+			Skill sk = skills [i];
+			skillButtons [i].onClick = () => character.CommitActionNow (sk);
+			skillButtons [i].img.enabled = SkillSystem.HasInDatabase (skills [i].name);
+		}
 
 		for (int i = 0; i < runeStats.Length; i++) {
 			string path = "Sprites/UI/Magicka";
@@ -266,7 +316,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		inventoryFunctionsLabel.SetActive (cur);
 
 		if (cur) {
-			IItem current = IItemAsset.items [items [currentLookableItemIndex]];
+			Item current = ItemsAsset.items [items [currentLookableItemIndex]];
 			string t = current.Info ();
 			SetTextWithScales (itemsInfo, t);
 		} else {
@@ -287,7 +337,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				rut.text = IUsable.GetUseText (can);
 			}
 		}
-		useCheck = (can != null);
 	}
 	private void InterfaceMotor () {
 
@@ -299,7 +348,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			messagesText.color = MyDebug.messages [MyDebug.messages.Count - 1].color;
 		}
 
-		if (state != IGameMenuState.Runtime) {
+		if (state != GameMenuState.Runtime) {
 			drag = false;
 		}
 		if (!toGameImage) {
@@ -308,13 +357,11 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 		runtimeTalk.image.enabled = character.canTalk;
 
-		toGameImage.enabled = (state != IGameMenuState.Runtime && state != IGameMenuState.Dialog);
+		toGameImage.enabled = (state != GameMenuState.Runtime && state != GameMenuState.Dialog);
 
 		IUsable can = character.canUse;
 
-		if (useCheck != (can != null)) {
-			CheckUse (can);
-		}
+		CheckUse (can);
 
 		int[] items = character.status.items;
 		//float delta = Mathf.Abs(slotsParent.rect.height - slotsMask.rect.height);
@@ -339,10 +386,10 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				});
 			}
 
-			amuletInv.GetComponentInChildren<RawImage> ().texture = IItemAsset.LoadTexture (character.status.amulet);
-			armorInv.GetComponentInChildren<RawImage> ().texture = IItemAsset.LoadTexture (character.status.armor);
-			weapontInv.GetComponentInChildren<RawImage> ().texture = IItemAsset.LoadTexture (character.status.weapon);
-			runeInv.GetComponentInChildren<RawImage> ().texture = IItemAsset.LoadTexture (character.status.rune);
+			amuletInv.GetComponentInChildren<RawImage> ().texture = ItemsAsset.LoadTexture (character.status.amulet);
+			armorInv.GetComponentInChildren<RawImage> ().texture = ItemsAsset.LoadTexture (character.status.armor);
+			weapontInv.GetComponentInChildren<RawImage> ().texture = ItemsAsset.LoadTexture (character.status.weapon);
+			runeInv.GetComponentInChildren<RawImage> ().texture = ItemsAsset.LoadTexture (character.status.rune);
 
 			int ru = character.status.rune;
 
@@ -351,21 +398,21 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			amuletInv.onClick.RemoveAllListeners ();
 			amuletInv.onClick.AddListener (delegate {
 			
-				ch.BackToInv(IItemType.Amulet);
+				ch.BackToInv(ItemType.Amulet);
 
 			});
 				
 			armorInv.onClick.RemoveAllListeners ();
 			armorInv.onClick.AddListener (delegate {
 
-				ch.BackToInv(IItemType.Armor);
+				ch.BackToInv(ItemType.Armor);
 
 			});
 
 			weapontInv.onClick.RemoveAllListeners ();
 			weapontInv.onClick.AddListener (delegate {
 
-				ch.BackToInv(IItemType.Weapon);
+				ch.BackToInv(ItemType.Weapon);
 
 			});
 
@@ -373,7 +420,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			runeInv.onClick.AddListener (delegate {
 
 				if (ru > -1) {
-					ch.BackToInv(IItemAsset.items[ru].type);
+					ch.BackToInv(ItemsAsset.items[ru].type);
 				}
 
 			});
@@ -404,6 +451,11 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			haveToMinUpdate = true;
 		}
 
+		if (stateChanged) {
+			haveToMinUpdate = true;
+			stateChanged = false;
+		}
+
 
 		if (haveToMinUpdate) {
 			InterfaceMinUpdate ();
@@ -416,15 +468,14 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		ISpace.LoadMainMenu ();
 	}
 	public void SaveAndExitButton () {
-		state = IGameMenuState.Runtime;
-		SetState ();
-		IGame.SavePicture (IGame.currentProfile);
-		IGame.CaptureGame ();
-		IGame.Save (IGame.buffer, IGame.currentProfile);
+		state = GameMenuState.Runtime;
+		SGame.SavePicture (SGame.currentProfile);
+		SGame.CaptureGame ();
+		SGame.Save (SGame.buffer, SGame.currentProfile);
 		Invoke ("ToMenu", 0.5f);
 	}
 	public void ReloadSaved () {
-		ISpace.LoadGameFromIndex (IGame.currentProfile);
+		ISpace.LoadGameFromIndex (SGame.currentProfile);
 	}
 	public static Vector3 headHeight
 	{
@@ -472,8 +523,8 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		}
 	}
 	private void PrepareCamera () {
-		camParent.eulerAngles = IGame.buffer.cameraEuler;
-		camParent.position = (Vector3)IGame.buffer.FindByName("Player").position + Vector3.up * 1.6f;
+		camParent.eulerAngles = SGame.buffer.cameraEuler;
+		camParent.position = (Vector3)SGame.buffer.FindByName("Player").position + Vector3.up * 1.6f;
 		cam.localPosition = -Vector3.forward * 3;
 		camMain = cam.GetComponent<Camera> ();
 	}
@@ -484,11 +535,10 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 	public void UseItem (int index) {
 		if (character.status.CanUseItem(character.status.items[index])) {
-			if (IItemAsset.items [character.status.items [index]].type == IItemType.EmptyScroll) {
+			if (ItemsAsset.items [character.status.items [index]].type == ItemType.EmptyScroll) {
 				if (character.status.spellsToday > 0) {
-					state = IGameMenuState.RuneCreate;
+					state = GameMenuState.RuneCreate;
 					character.RemoveItem (index);
-					SetState ();
 				}
 			} else {
 				character.UseItem (index);
@@ -500,7 +550,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 	public void Attack () {
 		if (character) {
-			character.AttackFromDirection (IVector.FlatAndNormallize (cam.forward));
+			character.AttackFromDirection (SVector.FlatAndNormallize (cam.forward));
 		}
 	}
 	private IChest lootableChest;
@@ -538,16 +588,48 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	[System.Serializable]
 	public struct InventorySlot
 	{
+		public enum SlotType
+		{
+			Item,
+			Skill
+		}
 		public Button button;
-		public int id;
+		public int id
+		{
+			get {
+				return (int)identificator;
+			}
+		}
+		public Skill skill
+		{
+			get {
+				return (Skill)identificator;
+			}
+		}
+		private object identificator;
 
 		public InventorySlot(int ID, Button bt)
 		{
-			id = ID;
+			identificator = ID;
+			button = bt;
+		}
+		public InventorySlot(Skill ID, Button bt)
+		{
+			identificator = ID;
 			button = bt;
 		}
 	}
 	public InventorySlot[] FillItemsTo (RectTransform parent, int[] items) {
+		return FillItemsTo <int> (parent, items);
+	}
+	public InventorySlot[] FillItemsTo <T> (RectTransform parent, IEnumerable<T> items) {
+
+		InventorySlot.SlotType sType = InventorySlot.SlotType.Item;
+
+		if (typeof(T) == typeof(Skill)) {
+			sType = InventorySlot.SlotType.Skill;
+		}
+
 		GameObject prefab = (GameObject)Resources.Load ("Prefabs/Slot");
 		Button[] buttons = parent.GetComponentsInChildren<Button>();
 		for (int i = 0; i < buttons.Length; i++) {
@@ -555,74 +637,101 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		}
 		List<InventorySlot> bts = new List<InventorySlot> ();
 
-		List<int> has = new List<int> ();
-		List<ISlot> upd = new List<ISlot> ();
+		List<Slot> upd = new List<Slot> ();
 
-		for (int i = 0; i < items.Length; i++) {
-			if (!HasInt (has.ToArray (), items[i])) {
-				upd.Add (new ISlot (items [i]));
-				has.Add (items [i]);
-			} else {
-				int index = -1;
-				for (int n = 0; n < upd.Count; n++) {
-					if (upd[n].id == items[i]) {
-						index = n;
-						break;
+		if (sType == InventorySlot.SlotType.Item) {
+			IEnumerable<int> its = items.Cast<int> ();
+			List<int> has = new List<int> ();
+			foreach (var item in its) {
+				if (!HasInt (has.ToArray (), item)) {
+					upd.Add (new Slot (item));
+					has.Add (item);
+				} else {
+					int index = -1;
+					for (int n = 0; n < upd.Count; n++) {
+						if (upd [n].id == item) {
+							index = n;
+							break;
+						}
+					}
+					if (index > -1) {
+						upd [index].Add ();
 					}
 				}
-				if (index > -1) {
-					upd [index].Add ();
-				}
+			}
+		} else {
+			IEnumerable<Skill> its = items.Cast<Skill> ();
+			foreach (var item in its) {
+				upd.Add (new Slot (item));
 			}
 		}
 
 		float slotSize = prefab.GetComponent<RectTransform>().rect.height;
 
+		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, slotSize * upd.Count);
+
 		for (int i = 0; i < upd.Count; i++) {
 			RectTransform trans = ((GameObject)Instantiate (prefab)).GetComponent<RectTransform> ();
 			trans.SetParent(parent);
 			trans.anchoredPosition = -Vector2.up * slotSize * i;
-			trans.GetComponentInChildren<RawImage>().texture = IItemAsset.LoadTexture(upd[i].id);
+			RawImage r = trans.GetComponentInChildren<RawImage> ();
+			switch (sType) {
+			case InventorySlot.SlotType.Item:
+				r.texture = ItemsAsset.LoadTexture(upd[i].id);
+				break;
+			case InventorySlot.SlotType.Skill:
+				r.texture = upd [i].skill.image;
+				break;
+			}
 			string num = "";
 			if (upd[i].count > 1) {
 				num = "(" + upd [i].count + ")";
 			}
 			Text t = trans.GetComponentInChildren<Text> ();
 			IFontSetter.SetFont (t);
-			t.text = IItemAsset.items[upd[i].id].name + num;
 
-			trans.SetSizeWithCurrentAnchors (RectTransform.Axis.Horizontal, parent.rect.width);
+			if (sType == InventorySlot.SlotType.Item) {
+				t.text = ItemsAsset.items [upd [i].id].name + num;
+			} else {
+				t.text = upd [i].skill.LitraName ();
+			}
+			float w = parent.rect.width;
+			w = w > 0 ? w : parent.parent.GetComponent<RectTransform> ().rect.width;
+			w = w > 0 ? w : parent.parent.parent.GetComponent<RectTransform> ().rect.width;
+			trans.SetSizeWithCurrentAnchors (RectTransform.Axis.Horizontal, w);
 			Button bt = trans.GetComponent<Button>();
 
 			Color c = Color.white;
 
-			if (!character.status.CanUseItem(upd[i].id)) {
-				c = new Color(1f, 0.5f, 0.5f);
+			if (sType == InventorySlot.SlotType.Item) {
+				if (!character.status.CanUseItem (upd [i].id)) {
+					c = new Color (1f, 0.5f, 0.5f);
+				}
 			}
 
 			bt.image.color = c;
 
-			bts.Add (new InventorySlot(upd[i].id, bt));
+			bts.Add (sType == InventorySlot.SlotType.Item ? new InventorySlot (upd[i].id, bt) : new InventorySlot (upd[i].skill, bt));
 		}
 
-		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, slotSize * upd.Count);
-
 		return bts.ToArray ();
+	}
+	private void EffectsUpdate () {
+		SkillEffect.EverySecUpdate ();
+		Invoke ("EffectsUpdate", 1);
 	}
 	private void Start () {
 		toInventory.onClick.RemoveAllListeners ();
 		toInventory.onClick.AddListener (delegate {
 
-			state = IGameMenuState.Inventory;
-			SetState();
+			state = GameMenuState.Inventory;
 
 		});
 
 		toGame.onClick.RemoveAllListeners ();
 		toGame.onClick.AddListener (delegate {
 			
-			state = IGameMenuState.Runtime;
-			SetState();
+			state = GameMenuState.Runtime;
 			
 		});
 
@@ -636,16 +745,14 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		toGameMenu.onClick.RemoveAllListeners ();
 		toGameMenu.onClick.AddListener (delegate {
 
-			state = IGameMenuState.Pause;
-			SetState();
+			state = GameMenuState.Pause;
 
 		});
 
 		toCharacterMenu.onClick.RemoveAllListeners ();
 		toCharacterMenu.onClick.AddListener (delegate {
 
-			state = IGameMenuState.CharacterInfo;
-			SetState();
+			state = GameMenuState.CharacterInfo;
 
 		});
 
@@ -674,53 +781,60 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		rune_air.onClick.RemoveAllListeners ();
 		rune_air.onClick.AddListener (delegate {
 
-			character.CreateRune(IItemType.ScrollOfAir);
-			state = IGameMenuState.Inventory;
-			SetState();
+			character.CreateRune(ItemType.ScrollOfAir);
+			state = GameMenuState.Inventory;
 
 		});
 		rune_fire.onClick.RemoveAllListeners ();
 		rune_fire.onClick.AddListener (delegate {
 
-			character.CreateRune(IItemType.ScrollOfFire);
-			state = IGameMenuState.Inventory;
-			SetState();
+			character.CreateRune(ItemType.ScrollOfFire);
+			state = GameMenuState.Inventory;
 
 		});
 		rune_earth.onClick.RemoveAllListeners ();
 		rune_earth.onClick.AddListener (delegate {
 
-			character.CreateRune(IItemType.ScrollOfEarth);
-			state = IGameMenuState.Inventory;
-			SetState();
+			character.CreateRune(ItemType.ScrollOfEarth);
+			state = GameMenuState.Inventory;
 
 		});
 		rune_water.onClick.RemoveAllListeners ();
 		rune_water.onClick.AddListener (delegate {
 
-			character.CreateRune(IItemType.ScrollOfWater);
-			state = IGameMenuState.Inventory;
-			SetState();
+			character.CreateRune(ItemType.ScrollOfWater);
+			state = GameMenuState.Inventory;
 
 		});
 		rune_god.onClick.RemoveAllListeners ();
 		rune_god.onClick.AddListener (delegate {
 
-			character.CreateRune(IItemType.ScrollOfGod);
-			state = IGameMenuState.Inventory;
-			SetState();
+			character.CreateRune(ItemType.ScrollOfGod);
+			state = GameMenuState.Inventory;
 
 		});
+
+		for (int i = 0; i < selectSkillButtons.Length; i++) {
+			int index = i;
+			selectSkillButtons [i].onClick = delegate() {
+				currentToSetSkill = index;
+				string sk = character.status.skills.quickSkills[currentToSetSkill];
+				if (SkillSystem.HasInDatabase(sk)) {
+					SetToQuickSkill(new Skill());
+				}
+			};
+		}
 
 		runeStats = runeStatsParent.GetComponentsInChildren<RawImage> ();
 		armorStats = armorStatsParent.GetComponentsInChildren<RawImage> ();
 
 		PrepareCamera ();
 
+		state = GameMenuState.Runtime;
+
+		Invoke ("EffectsUpdate", 1);
 
 		CheckUse (null);
-
-		SetState ();
 	}
 	private void UseRuntime () {
 		if (character) {
@@ -729,8 +843,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				character.UseGameObject (character.canUse);
 				if (us is IChest) {
 					PrepareLootItems ((IChest)us);
-					state = IGameMenuState.Loot;
-					SetState ();
+					state = GameMenuState.Loot;
 				}
 			}
 		}
@@ -738,8 +851,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	private void TalkRuntime () {
 		
 		if (character.canTalk) {
-			state = IGameMenuState.Dialog;
-			SetState();
+			state = GameMenuState.Dialog;
 			ToDialog();
 		}
 	}

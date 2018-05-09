@@ -90,7 +90,7 @@ public class ISpell
 		sp.destination = point;
 		sp.spell = spell;
 	}
-	public static void SpellEffect (ISpellRune spell, IStatus caster, Vector3 position) {
+	public static void SpellEffect (ISpellRune spell, Status caster, Vector3 position) {
 		float pr = Random.Range (0, 100);
 		if (pr > 95) {
 			switch (spell) {

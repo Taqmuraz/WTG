@@ -9,24 +9,24 @@ using System;
 using System.Linq;
 
 [System.Serializable]
-public struct IColor
+public struct SColor
 {
 	public float r;
 	public float g;
 	public float b;
 
-	public IColor (float r, float g, float b) {
+	public SColor (float r, float g, float b) {
 		this.r = r;
 		this.g = g;
 		this.b = b;
 	}
-	public static implicit operator Color (IColor c) {
+	public static implicit operator Color (SColor c) {
 		return new Color (c.r, c.g, c.b, 1);
 	}
-	public static implicit operator IColor (Color c) {
-		return new IColor (c.r, c.g, c.b);
+	public static implicit operator SColor (Color c) {
+		return new SColor (c.r, c.g, c.b);
 	}
-	public static implicit operator string (IColor c) {
+	public static implicit operator string (SColor c) {
 		return "Color : " + c.r + ", " + c.g + ", " + c.b;
 	}
 	public string ToText () {
@@ -34,39 +34,39 @@ public struct IColor
 	}
 }
 [System.Serializable]
-public struct IVector
+public struct SVector
 {
 	public float x;
 	public float y;
 	public float z;
 	
-	public IVector (float x, float y, float z) {
+	public SVector (float x, float y, float z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
-	public static implicit operator Vector3 (IVector v) {
+	public static implicit operator Vector3 (SVector v) {
 		return new Vector3 (v.x, v.y, v.z);
 	}
-	public static implicit operator IVector (Vector3 v) {
-		return new IVector (v.x, v.y, v.z);
+	public static implicit operator SVector (Vector3 v) {
+		return new SVector (v.x, v.y, v.z);
 	}
-	public static IVector operator * (IVector a, float b) {
-		return new IVector (a.x * b, a.y * b, a.z * b);
+	public static SVector operator * (SVector a, float b) {
+		return new SVector (a.x * b, a.y * b, a.z * b);
 	}
-	public static IVector operator / (IVector a, float b) {
-		return new IVector (a.x / b, a.y / b, a.z / b);
+	public static SVector operator / (SVector a, float b) {
+		return new SVector (a.x / b, a.y / b, a.z / b);
 	}
-	public static IVector operator + (IVector a, IVector b) {
-		return new IVector (a.x + b.x, a.y + b.y, a.z + b.z);
+	public static SVector operator + (SVector a, SVector b) {
+		return new SVector (a.x + b.x, a.y + b.y, a.z + b.z);
 	}
-	public static IVector operator - (IVector a, IVector b) {
-		return new IVector (a.x - b.x, a.y - b.y, a.z - b.z);
+	public static SVector operator - (SVector a, SVector b) {
+		return new SVector (a.x - b.x, a.y - b.y, a.z - b.z);
 	}
-	public static IVector Flat (IVector origin) {
-		return new IVector (origin.x, 0, origin.z);
+	public static SVector Flat (SVector origin) {
+		return new SVector (origin.x, 0, origin.z);
 	}
-	public static IVector FlatAndNormallize (Vector3 origin) {
+	public static SVector FlatAndNormallize (Vector3 origin) {
 		return Flat (origin).normallized;
 	}
 	public float magnitude
@@ -75,14 +75,14 @@ public struct IVector
 			return Mathf.Sqrt (x * x + y * y + z * z);
 		}
 	}
-	public IVector normallized
+	public SVector normallized
 	{
 		get
 		{
 			return this / magnitude;
 		}
 	}
-	public IVector flatten
+	public SVector flatten
 	{
 		get
 		{
@@ -91,34 +91,34 @@ public struct IVector
 	}
 }
 [System.Serializable]
-public class ISaveble
+public class Saveble
 {
 	public string name = "unknown";
-	public IVector position = new IVector (0, 0, 0);
+	public SVector position = new SVector (0, 0, 0);
 	public float euler_y = 0;
 
 	public string ToJSON () {
 
-		if (this is IStatus) {
-			return JsonUtility.ToJson ((IStatus)this);
+		if (this is Status) {
+			return JsonUtility.ToJson ((Status)this);
 		}
-		if (this is IDoorSave) {
-			return JsonUtility.ToJson ((IDoorSave)this);
+		if (this is SDoorSave) {
+			return JsonUtility.ToJson ((SDoorSave)this);
 		}
-		if (this is ISavableItem) {
-			return JsonUtility.ToJson ((ISavableItem)this);
+		if (this is SavebleItem) {
+			return JsonUtility.ToJson ((SavebleItem)this);
 		}
 
 		return JsonUtility.ToJson (this);
 	}
 	public void MoveToLocation (GameObject obj, string nextLocation) {
-		foreach (var l in IGame.buffer.locations) {
+		foreach (var l in SGame.buffer.locations) {
 			l.Value.RemoveObject (this);
 		}
-		if (!IGame.buffer.HasLocation(nextLocation)) {
-			IGame.buffer.InitializeLocation (nextLocation);
+		if (!SGame.buffer.HasLocation(nextLocation)) {
+			SGame.buffer.InitializeLocation (nextLocation);
 		}
-		IGame.buffer.locations [nextLocation].AddObject (this);
+		SGame.buffer.locations [nextLocation].AddObject (this);
 		if (obj) {
 			GameObject.Destroy (obj);
 		}
@@ -165,21 +165,21 @@ public class SaveTexture
 public class Location
 {
 	public string locationName = "unnamed";
-	public ISaveble[] objects;
+	public Saveble[] objects;
 	public bool hasBeenHere = false;
 
-	public Location (ISaveble[] objs, string name) {
+	public Location (Saveble[] objs, string name) {
 		objects = objs;
 		locationName = name;
 	}
-	public void AddObject (ISaveble obj) {
-		List<ISaveble> objs = new List<ISaveble> ();
+	public void AddObject (Saveble obj) {
+		List<Saveble> objs = new List<Saveble> ();
 		objs.AddRange (objects);
 		objs.Add (obj);
 		objects = objs.ToArray ();
 	}
-	public void RemoveObject (ISaveble obj) {
-		List<ISaveble> objs = new List<ISaveble> ();
+	public void RemoveObject (Saveble obj) {
+		List<Saveble> objs = new List<Saveble> ();
 		objs.AddRange (objects);
 		objs.Remove (obj);
 		objects = objs.ToArray ();
@@ -192,13 +192,25 @@ public class Settings
 	public int fontSize = 22;
 }
 [System.Serializable]
-public class ISlot
+public class Slot
 {
-	public int id;
+	public int id
+	{
+		get {
+			return (int)identificator;
+		}
+	}
+	public Skill skill
+	{
+		get {
+			return (Skill)identificator;
+		}
+	}
+	private object identificator;
 	public int count;
 
-	public ISlot (int ID) {
-		id = ID;
+	public Slot (object ID) {
+		identificator = ID;
 		count = 1;
 	}
 	public void Add () {
@@ -206,17 +218,17 @@ public class ISlot
 	}
 }
 [System.Serializable]
-public class IGame
+public class SGame
 {
 	public Dictionary <string, Location> locations = new Dictionary<string, Location> ();
-	public IQuest[] progress;
+	public SQuest[] progress;
 	public List<DebugMessage> messages = new List<DebugMessage>();
 
 	public string currentLocationName = "Arena";
 
 	public DateTime date = new DateTime();
 
-	public IVector cameraEuler;
+	public SVector cameraEuler;
 
 	public static bool isNew
 	{
@@ -226,12 +238,12 @@ public class IGame
 	}
 	public static int currentProfile = 0;
 
-	public static IGame buffer;
+	public static SGame buffer;
 
-	public ISaveble FindByName (string name) {
-		ISaveble[] svs = locations [currentLocationName].objects;
+	public Saveble FindByName (string name) {
+		Saveble[] svs = locations [currentLocationName].objects;
 
-		ISaveble sav = new ISaveble ();
+		Saveble sav = new Saveble ();
 
 		for (int i = 0; i < svs.Length; i++) {
 			if (svs[i].name == name) {
@@ -243,7 +255,7 @@ public class IGame
 		return sav;
 	}
 
-	public IGame (ISaveble[] objects, IQuest[] progress) {
+	public SGame (Saveble[] objects, SQuest[] progress) {
 		this.locations.Add ("Arena", new Location(objects, "Arena"));
 		this.progress = progress;
 	}
@@ -258,7 +270,7 @@ public class IGame
 
 	public void MoveToLocation (string locationName) {
 		CaptureGame ();
-		ISaveble player = FindByName ("Player");
+		Saveble player = FindByName ("Player");
 
 		currentLocationName = locationName;
 
@@ -272,10 +284,10 @@ public class IGame
 	}
 
 	public void InitializeLocation (string name) {
-		locations.Add (name, new Location (new ISaveble[0], name));
+		locations.Add (name, new Location (new Saveble[0], name));
 	}
 
-	public static void Save (IGame game, int index) {
+	public static void Save (SGame game, int index) {
 		BinaryFormatter bf = new BinaryFormatter ();
 		string path = Application.persistentDataPath + "/Save_" + index + ".sav";
 		FileStream file = File.Create (path);
@@ -316,21 +328,21 @@ public class IGame
 		string path = Application.persistentDataPath + "/Save_" + index + ".sav";
 		return File.Exists (path);
 	}
-	public static IGame Load (int index) {
+	public static SGame Load (int index) {
 		string path = Application.persistentDataPath + "/Save_" + index + ".sav";
-		IGame game = new IGame (new ISaveble[0], new IQuest[0]);
+		SGame game = new SGame (new Saveble[0], new SQuest[0]);
 		if (File.Exists(path)) {
 			BinaryFormatter bf = new BinaryFormatter ();
 			FileStream file = File.Open (path, FileMode.Open);
-			game = (IGame)bf.Deserialize (file);
+			game = (SGame)bf.Deserialize (file);
 			file.Close ();
 		}
-		IQuest.current = game.progress;
+		SQuest.current = game.progress;
 		buffer = game;
 		return game;
 	}
 	public static void CaptureGame () {
-		List<ISaveble> savs = new List<ISaveble> ();
+		List<Saveble> savs = new List<Saveble> ();
 
 		ICharacter[] chars = ICharacter.charactersAll.ToArray ();
 
@@ -352,29 +364,28 @@ public class IGame
 		for (int i = 0; i < doors.Length; i++) {
 			savs.Add (doors [i].data);
 		}
-		Debug.Log (IGame.buffer.currentLocationName);
-		IGame.buffer.locations [IGame.buffer.currentLocationName].objects = savs.ToArray ();
-		IGame.buffer.date = DateTime.Now;
-		IGame.buffer.progress = IQuest.current;
-		IGame.buffer.cameraEuler = (Vector3)IControl.control.cameraEuler;
-		IGame.buffer.currentLocation.hasBeenHere = true;
+		SGame.buffer.locations [SGame.buffer.currentLocationName].objects = savs.ToArray ();
+		SGame.buffer.date = DateTime.Now;
+		SGame.buffer.progress = SQuest.current;
+		SGame.buffer.cameraEuler = (Vector3)IControl.control.cameraEuler;
+		SGame.buffer.currentLocation.hasBeenHere = true;
 	}
 }
 [System.Serializable]
-public class IQuest
+public class SQuest
 {
 	public bool available = true;
 	public bool did = false;
 
-	public static IQuest[] current = new IQuest[0];
+	public static SQuest[] current = new SQuest[0];
 
-	public static IQuest[] GetStart () {
-		IQuest[] q = { new IQuest_Arena () };
+	public static SQuest[] GetStart () {
+		SQuest[] q = { new IQuest_Arena () };
 		return q;
 	}
 }
 [System.Serializable]
-public class ISavableItem : ISaveble
+public class SavebleItem : Saveble
 {
 	public int id = 0;
 }
@@ -446,72 +457,110 @@ public class Immunities
 	}
 }
 [System.Serializable]
-public class IStatus : ISaveble
+public class Status : Saveble
 {
 	public string characterName = "no name";
 	public int health = 100;
 	public int level = 1;
 	public int money = 0;
+
+	public List<SkillEffect> effects {get; private set;}
+
+	public Status (ClassType iT) {
+		skills = new SkillSystem (iT);
+		effects = new List<SkillEffect> ();
+	}
+
+	public void SetEffect (string name, SkillEffect newValue) {
+		effects [effects.FindIndex ((SkillEffect se) => se.effectName == name)] = newValue;
+	}
+
+	public void Heal (int points) {
+		health += points;
+		health = Mathf.Clamp(health, 1, maxHealth);
+	}
+
+	public SkillSystem skills;
+
+	public void SetDamageLawEvent (Status to) {
+		if (!(Reputation.GetEnemity(to, this) > 1)) {
+			switch (reputationType) {
+			case ReputationType.Bandit:
+				reputationType = ReputationType.Monster;
+				break;
+			case ReputationType.People:
+				reputationType = ReputationType.Bandit;
+				break;
+			case ReputationType.Cleric:
+				reputationType = ReputationType.People;
+				break;
+			case ReputationType.Mage:
+				reputationType = ReputationType.Monster;
+				break;
+			}
+		}
+	}
+
 	public Immunities immunity
 	{
 		get {
 			Immunities imm = new Immunities ();
 
 			switch (iRace) {
-			case IRace.Angel:
+			case Race.Angel:
 				imm = new Immunities (-50, 0, 0, 0, 0, 75);
 				break;
-			case IRace.Devil:
+			case Race.Devil:
 				imm = new Immunities (0, 80, -100, 0, 0, -50);
 				break;
-			case IRace.Elf:
+			case Race.Elf:
 				imm = new Immunities (-25, 0, 0, 0, 0, 45);
 				break;
-			case IRace.Human:
+			case Race.Human:
 				imm = new Immunities (0, 0, 0, 0, 0, 0);
 				break;
-			case IRace.Orc:
+			case Race.Orc:
 				imm = new Immunities (35, 25, 0, 0, 25, -100);
 				break;
-			case IRace.Vampire:
+			case Race.Vampire:
 				imm = new Immunities (50, -100, 0, 0, 0, -100);
 				break;
-			case IRace.Verwolf:
+			case Race.Verwolf:
 				imm = new Immunities (50, -50, -50, 0, 0, -50);
 				break;
-			case IRace.Witch:
+			case Race.Witch:
 				imm = new Immunities (0, 0, 0, 0, 0, -50);
 				break;
 			}
 
 			switch (iType) {
-			case IClassType.Antimage:
+			case ClassType.Antimage:
 				int m = 20 + 5 * level;
 				imm += new Immunities (0, m, m, m, m, m);
 				break;
-			case IClassType.Monk:
+			case ClassType.Monk:
 				imm += new Immunities (5 * level, 0, 0, 0, 0, 0);
 				break;
 			}
 
 			Immunities ar = new Immunities ();
 			if (armor > -1) {
-				ar = IItemAsset.items [armor].bonuses;
+				ar = ItemsAsset.items [armor].bonuses;
 			}
 			Immunities we = new Immunities ();
 			if (weapon > -1) {
-				we = IItemAsset.items [weapon].bonuses;
+				we = ItemsAsset.items [weapon].bonuses;
 			}
 			Immunities am = new Immunities ();
 			if (amulet > -1) {
-				am = IItemAsset.items [amulet].bonuses;
+				am = ItemsAsset.items [amulet].bonuses;
 			}
 
 			return imm + ar + we + am;
 		}
 	}
 	public bool CanUseItem (int itemID) {
-		IItem item = IItemAsset.items [itemID];
+		Item item = ItemsAsset.items [itemID];
 		bool can = true;
 		if (item.spetiality.Length > 0) {
 			bool has = false;
@@ -535,7 +584,7 @@ public class IStatus : ISaveble
 	{
 		get {
 			Gender g = Gender.Male;
-			if (iRace == IRace.Angel || iRace == IRace.Witch) {
+			if (iRace == Race.Angel || iRace == Race.Witch) {
 				g = Gender.Female;
 			}
 			return g;
@@ -568,6 +617,14 @@ public class IStatus : ISaveble
 		info = info + '\n' + "Харизма : " + personability;
 		info = info + '\n' + '\n' + immunity.ToText();
 
+		string eff = "" + '\n';
+
+		foreach (var item in effects) {
+			eff += item.Info () + '\n';
+		}
+
+		info = info + eff;
+
 		return info;
 	}
 	public int spellsToday
@@ -586,36 +643,36 @@ public class IStatus : ISaveble
 	}
 	public void SetSpellsTodayBy () {
 		int sp = (intellect - 1) / 2 + level / 2;
-		if (iType != IClassType.Wonder) {
+		if (iType != ClassType.Wonder) {
 			sp /= 2;
 		}
 		spellsToday = sp;
 	}
 	private int sptd = 2;
-	public IReputationType reputationType = IReputationType.People;
-	public IReputation reputation
+	public ReputationType reputationType = ReputationType.People;
+	public Reputation reputation
 	{
 		get
 		{
-			IReputation rep = new IReputation (0, 0, 0, 0, 0, 0);
+			Reputation rep = new Reputation (0, 0, 0, 0, 0, 0);
 
-			if (reputationType == IReputationType.Bandit) {
-				rep = IReputation.standart_bandit;
+			if (reputationType == ReputationType.Bandit) {
+				rep = Reputation.standart_bandit;
 			}
-			if (reputationType == IReputationType.Cleric) {
-				rep = IReputation.standart_cleric;
+			if (reputationType == ReputationType.Cleric) {
+				rep = Reputation.standart_cleric;
 			}
-			if (reputationType == IReputationType.Guard) {
-				rep = IReputation.standart_guard;
+			if (reputationType == ReputationType.Guard) {
+				rep = Reputation.standart_guard;
 			}
-			if (reputationType == IReputationType.Mage) {
-				rep = IReputation.standart_mage;
+			if (reputationType == ReputationType.Mage) {
+				rep = Reputation.standart_mage;
 			}
-			if (reputationType == IReputationType.Monster) {
-				rep = IReputation.standart_monster;
+			if (reputationType == ReputationType.Monster) {
+				rep = Reputation.standart_monster;
 			}
-			if (reputationType == IReputationType.People) {
-				rep = IReputation.standart_citizen;
+			if (reputationType == ReputationType.People) {
+				rep = Reputation.standart_citizen;
 			}
 
 			return rep;
@@ -628,8 +685,8 @@ public class IStatus : ISaveble
 			int b = -1;
 			int max = 0;
 			for (int i = 0; i < items.Length; i++) {
-				IItem it = IItemAsset.items [items [i]];
-				if (it.type == IItemType.Weapon) {
+				Item it = ItemsAsset.items [items [i]];
+				if (it.type == ItemType.Weapon) {
 					if (it.value > max) {
 						b = i;
 						max = it.value;
@@ -647,12 +704,12 @@ public class IStatus : ISaveble
 		get {
 			int damage = (strongness / 10) + level;
 			if (weapon > -1) {
-				damage = IItemAsset.items [weapon].value + (strongness / 10) + level;
+				damage = ItemsAsset.items [weapon].value + (strongness / 10) + level;
 			} else {
-				if (iType == IClassType.Monk) {
+				if (iType == ClassType.Monk) {
 					damage = (strongness / 8) + level * 2;
 				}
-				if (iRace == IRace.Verwolf) {
+				if (iRace == Race.Verwolf) {
 					damage = damage + level * 2;
 				}
 			}
@@ -662,7 +719,7 @@ public class IStatus : ISaveble
 	public bool canUseRunes
 	{
 		get {
-			return iType == IClassType.Bard || iType == IClassType.Wonder;
+			return iType == ClassType.Thief || iType == ClassType.Wonder;
 		}
 	}
 	public int damage_spell
@@ -681,41 +738,42 @@ public class IStatus : ISaveble
 		{
 			int prot = 0;
 			if (armor > -1) {
-				prot = IItemAsset.items [armor].value;
+				prot = ItemsAsset.items [armor].value;
 			}
 			if (amulet > -1) {
-				prot += IItemAsset.items [amulet].value;
+				prot += ItemsAsset.items [amulet].value;
 			}
 			prot = Mathf.Clamp (prot, 0, 10);
 			return prot;
 		}
 	}
 	public void ApplyDamage (int damage) {
-		ApplyDamage (damage, IDamageType.Just);
+		ApplyDamage (damage, DamageType.Just);
 	}
-	public int ApplyDamage (int damage, IDamageType dmgType) {
+	public int ApplyDamage (int damage, DamageType dmgType) {
 		if (armor > -1) {
 			damage = Mathf.Clamp (damage - armorProtection, 1, damage);
 		}
 		int imm = 0;
 		switch (dmgType) {
-		case IDamageType.Air:
+		case DamageType.Air:
 			imm = immunity.air;
 			break;
-		case IDamageType.Water:
+		case DamageType.Water:
 			imm = immunity.water;
 			break;
-		case IDamageType.Fire:
+		case DamageType.Fire:
 			imm = immunity.fire;
 			break;
-		case IDamageType.Earth:
+		case DamageType.Earth:
 			imm = immunity.earth;
 			break;
-		case IDamageType.Magic:
+		case DamageType.Magic:
 			imm = immunity.magic;
 			break;
-		case IDamageType.Melee:
+		case DamageType.Melee:
 			imm = immunity.melee;
+
 			break;
 		}
 		imm = 100 - imm;
@@ -724,55 +782,65 @@ public class IStatus : ISaveble
 		return damage;
 	}
 
-	public static IClassType[] MayBe (IRace race) {
+	public void AddEffect (SkillEffect effect) {
+		effects.Add (effect);
+	}
+	public void RemoveEffect (string name) {
+		effects.Remove (effects.Find ((SkillEffect s) => s.effectName == name));
+	}
+	public void RemoveEffect (SkillEffect effect) {
+		effects.Remove (effect);
+	}
 
-		IClassType[] types = new IClassType[0];
+	public static ClassType[] MayBe (Race race) {
 
-		if (race == IRace.Angel) {
-			IClassType[] n = {IClassType.Antimage, IClassType.Wonder, IClassType.Bard, IClassType.Monk, IClassType.Cleric, IClassType.Inquisitor, IClassType.Palladin};
+		ClassType[] types = new ClassType[0];
+
+		if (race == Race.Angel) {
+			ClassType[] n = {ClassType.Antimage, ClassType.Wonder, ClassType.Thief, ClassType.Monk, ClassType.Cleric, ClassType.Inquisitor, ClassType.Palladin};
 			types = n;
 		}
-		if (race == IRace.Devil) {
-			IClassType[] n = {IClassType.DarknessSpirit, IClassType.Bard};
+		if (race == Race.Devil) {
+			ClassType[] n = {ClassType.DarknessSpirit, ClassType.Thief};
 			types = n;
 		}
-		if (race == IRace.Elf) {
-			IClassType[] n = {IClassType.Antimage, IClassType.Wonder, IClassType.Bard, IClassType.Cleric, IClassType.Inquisitor};
+		if (race == Race.Elf) {
+			ClassType[] n = {ClassType.Antimage, ClassType.Wonder, ClassType.Thief, ClassType.Cleric, ClassType.Inquisitor};
 			types = n;
 		}
-		if (race == IRace.Human) {
-			IClassType[] n = {IClassType.Antimage,
-				IClassType.Wonder,
-				IClassType.Bard,
-				IClassType.Cleric,
-				IClassType.DarknessSpirit,
-				IClassType.Inquisitor,
-				IClassType.Monk,
-				IClassType.Palladin};
+		if (race == Race.Human) {
+			ClassType[] n = {ClassType.Antimage,
+				ClassType.Wonder,
+				ClassType.Thief,
+				ClassType.Cleric,
+				ClassType.DarknessSpirit,
+				ClassType.Inquisitor,
+				ClassType.Monk,
+				ClassType.Palladin};
 			types = n;
 		}
-		if (race == IRace.Orc) {
-			IClassType[] n = {IClassType.Antimage, IClassType.DarknessSpirit, IClassType.Bard, IClassType.Monk};
+		if (race == Race.Orc) {
+			ClassType[] n = {ClassType.Antimage, ClassType.DarknessSpirit, ClassType.Thief, ClassType.Monk};
 			types = n;
 		}
-		if (race == IRace.Vampire) {
-			IClassType[] n = {IClassType.DarknessSpirit, IClassType.Wonder, IClassType.Bard};
+		if (race == Race.Vampire) {
+			ClassType[] n = {ClassType.DarknessSpirit, ClassType.Wonder, ClassType.Thief};
 			types = n;
 		}
-		if (race == IRace.Verwolf) {
-			IClassType[] n = {IClassType.Antimage, IClassType.Monk, IClassType.Wonder, IClassType.Bard, IClassType.DarknessSpirit};
+		if (race == Race.Verwolf) {
+			ClassType[] n = {ClassType.Antimage, ClassType.Monk, ClassType.Wonder, ClassType.Thief, ClassType.DarknessSpirit};
 			types = n;
 		}
-		if (race == IRace.Witch) {
-			IClassType[] n = {IClassType.Wonder, IClassType.Bard, IClassType.Antimage, IClassType.DarknessSpirit, IClassType.Monk};
+		if (race == Race.Witch) {
+			ClassType[] n = {ClassType.Wonder, ClassType.Thief, ClassType.Antimage, ClassType.DarknessSpirit, ClassType.Monk};
 			types = n;
 		}
 
 		return types;
 	}
-	public static bool MayBeNow (IRace race, IClassType type) {
+	public static bool MayBeNow (Race race, ClassType type) {
 
-		IClassType[] may = MayBe (race);
+		ClassType[] may = MayBe (race);
 
 		bool yet = false;
 
@@ -790,30 +858,30 @@ public class IStatus : ISaveble
 	{
 		get 
 		{
-			IClassType ic = this.iType;
+			ClassType ic = this.iType;
 			int h = 1;
-			if (ic == IClassType.Antimage) {
+			if (ic == ClassType.Antimage) {
 				h = 5 + 5 * level;
 			}
-			if (ic == IClassType.Bard) {
+			if (ic == ClassType.Thief) {
 				h = 5 + 2 * level;
 			}
-			if (ic == IClassType.Cleric) {
+			if (ic == ClassType.Cleric) {
 				h = 5 + 4 * level;
 			}
-			if (ic == IClassType.DarknessSpirit) {
+			if (ic == ClassType.DarknessSpirit) {
 				h = 5 + 6 * level;
 			}
-			if (ic == IClassType.Inquisitor) {
+			if (ic == ClassType.Inquisitor) {
 				h = 5 + 6 * level;
 			}
-			if (ic == IClassType.Monk) {
+			if (ic == ClassType.Monk) {
 				h = 5 + 7 * level;
 			}
-			if (ic == IClassType.Palladin) {
+			if (ic == ClassType.Palladin) {
 				h = 5 + 4 * level;
 			}
-			if (ic == IClassType.Wonder) {
+			if (ic == ClassType.Wonder) {
 				h = 5 + 1 * level;
 			}
 
@@ -824,20 +892,28 @@ public class IStatus : ISaveble
 		bool has = items.Contains<int> (id);
 		return has;
 	}
-	public IClassType iType = IClassType.Simple;
-	public IPersonView iPerson = new IPersonView();
-	public IPersonView iPersonWithArmor
+	public ClassType iType
+	{
+		get {
+			return skills.iType;
+		}
+		set {
+			skills.iType = value;
+		}
+	}
+	public PersonView iPerson = new PersonView();
+	public PersonView iPersonWithArmor
 	{
 		get
 		{
-			IPersonView person = iPerson;
+			PersonView person = iPerson;
 			if (armor > -1) {
-				person.cloth_color = IItemAsset.items [armor].color;
+				person.cloth_color = ItemsAsset.items [armor].color;
 			}
 			return person;
 		}
 	}
-	public IRace iRace = IRace.Human;
+	public Race iRace = Race.Human;
 	public int[] items = new int[0];
 	public int strongness = 5;
 	public int intellect = 5;
@@ -871,16 +947,16 @@ public class IStatus : ISaveble
 	public int rune = -1;
 }
 [System.Serializable]
-public struct IPersonView
+public struct PersonView
 {
-	public IColor hair_color;
-	public IColor cloth_color;
-	public IColor cloth_more_color;
-	public IColor skin_color;
+	public SColor hair_color;
+	public SColor cloth_color;
+	public SColor cloth_more_color;
+	public SColor skin_color;
 
-	public static void SetToRenderer (IStatus status, Renderer rend) {
+	public static void SetToRenderer (Status status, Renderer rend) {
 
-		IPersonView person = status.iPersonWithArmor;
+		PersonView person = status.iPersonWithArmor;
 
 		for (int i = 0; i < rend.materials.Length; i++) {
 			string cur = rend.materials[i].name;
@@ -901,8 +977,8 @@ public struct IPersonView
 			}
 		}
 	}
-	public static void SetToManyRenderer (IStatus status, Renderer[] rends) {
-		IPersonView person = status.iPersonWithArmor;
+	public static void SetToManyRenderer (Status status, Renderer[] rends) {
+		PersonView person = status.iPersonWithArmor;
 		for (int i = 0; i < rends.Length; i++) {
 			string cur = rends[i].material.name;
 
@@ -924,20 +1000,20 @@ public struct IPersonView
 	}
 }
 [System.Serializable]
-public enum IClassType
+public enum ClassType
 {
 	Simple,
 	Monk,
 	Cleric,
 	Wonder,
 	Palladin,
-	Bard,
+	Thief,
 	Inquisitor,
 	Antimage,
 	DarknessSpirit
 }
 [System.Serializable]
-public enum IRace
+public enum Race
 {
 	Human,
 	Elf,
@@ -949,7 +1025,7 @@ public enum IRace
 	Devil
 }
 [System.Serializable]
-public enum IReputationType
+public enum ReputationType
 {
 	People,
 	Bandit,
@@ -959,9 +1035,9 @@ public enum IReputationType
 	Cleric
 }
 [System.Serializable]
-public class IReputation
+public class Reputation
 {
-	public IReputation (int people, int bandit, int guard, int monster, int mages, int clerics) {
+	public Reputation (int people, int bandit, int guard, int monster, int mages, int clerics) {
 		this.people = people;
 		this.bandit = bandit;
 		this.guard = guard;
@@ -970,25 +1046,25 @@ public class IReputation
 		this.clerics = clerics;
 	}
 
-	public static int GetEnemity (IStatus _target, IStatus _attacker) {
+	public static int GetEnemity (Status _target, Status _attacker) {
 		int delta = 0;
 
-		if (_target.reputationType == IReputationType.Bandit) {
+		if (_target.reputationType == ReputationType.Bandit) {
 			delta = Mathf.Abs(1 - _attacker.reputation.bandit);
 		}
-		if (_target.reputationType == IReputationType.Cleric) {
+		if (_target.reputationType == ReputationType.Cleric) {
 			delta = Mathf.Abs(1 - _attacker.reputation.clerics);
 		}
-		if (_target.reputationType == IReputationType.Guard) {
+		if (_target.reputationType == ReputationType.Guard) {
 			delta = Mathf.Abs(1 - _attacker.reputation.guard);
 		}
-		if (_target.reputationType == IReputationType.Mage) {
+		if (_target.reputationType == ReputationType.Mage) {
 			delta = Mathf.Abs(1 - _attacker.reputation.mages);
 		}
-		if (_target.reputationType == IReputationType.Monster) {
+		if (_target.reputationType == ReputationType.Monster) {
 			delta = Mathf.Abs(1 - _attacker.reputation.monster);
 		}
-		if (_target.reputationType == IReputationType.People) {
+		if (_target.reputationType == ReputationType.People) {
 			delta = Mathf.Abs(1 - _attacker.reputation.people);
 		}
 
@@ -1002,51 +1078,51 @@ public class IReputation
 	public int mages = 0;
 	public int clerics = 0;
 
-	public static IReputation standart_citizen
+	public static Reputation standart_citizen
 	{
 		get
 		{
-			return new IReputation (1, -1, 1, -1, 0, 1);
+			return new Reputation (1, -1, 1, -1, 0, 1);
 		}
 	}
-	public static IReputation standart_bandit
+	public static Reputation standart_bandit
 	{
 		get
 		{
-			return new IReputation (-1, 1, -1, -1, 0, 0);
+			return new Reputation (-1, 1, -1, -1, 0, 0);
 		}
 	}
-	public static IReputation standart_mage
+	public static Reputation standart_mage
 	{
 		get
 		{
-			return new IReputation (0, 0, 0, -1, 1, 0);
+			return new Reputation (0, 0, 0, -1, 1, 0);
 		}
 	}
-	public static IReputation standart_cleric
+	public static Reputation standart_cleric
 	{
 		get
 		{
-			return new IReputation (1, 0, 1, -1, 0, 1);
+			return new Reputation (1, 0, 1, -1, 0, 1);
 		}
 	}
-	public static IReputation standart_monster
+	public static Reputation standart_monster
 	{
 		get
 		{
-			return new IReputation (-1, -1, -1, -1, -1, -1);
+			return new Reputation (-1, -1, -1, -1, -1, -1);
 		}
 	}
-	public static IReputation standart_guard
+	public static Reputation standart_guard
 	{
 		get
 		{
-			return new IReputation (1, -1, 1, -1, 0, 1);
+			return new Reputation (1, -1, 1, -1, 0, 1);
 		}
 	}
 }
 [System.Serializable]
-public enum IDamageType
+public enum DamageType
 {
 	Fire,
 	Water,
@@ -1059,7 +1135,7 @@ public enum IDamageType
 
 public class ICharacter : MonoBehaviour
 {
-	public IStatus status = new IStatus();
+	public Status status = new Status(ClassType.Simple);
 	public Renderer main_render;
 	public Transform trans;
 	public Animator anims;
@@ -1086,7 +1162,7 @@ public class ICharacter : MonoBehaviour
 		if (status.canUseRunes && status.rune < 0) {
 			int rune = -1;
 			for (int i = 0; i < status.items.Length; i++) {
-				if (IItem.IsSpell (status.items [i])) {
+				if (Item.IsSpell (status.items [i])) {
 					rune = i;
 					break;
 				}
@@ -1105,12 +1181,31 @@ public class ICharacter : MonoBehaviour
 		if (enemyNearby) {
 			if (!((enemyNearby.trans.position - trans.position).magnitude < 1.25)) {
 				if (status.canUseRunes && status.rune > -1) {
-					CastSpell (enemyNearby.trans.position);
+					//CastSpell (enemyNearby.trans.position);
 				} else {
 					MoveTo (enemyNearby.trans.position - trans.forward);
 				}
 			} else {
 				Attack (enemyNearby);
+			}
+		}
+	}
+	public void CommitActionNow (Skill action) {
+		if (SkillSystem.HasInDatabase(action.name)) {
+			Vector3 dir = this == IControl.character ? IControl.cam.forward : trans.forward;
+			switch (action.targetType) {
+			case SkillTarget.Enemy:
+				action.action (new SkillActionData (this, GetBest(dir)));
+				break;
+			case SkillTarget.Ally:
+				action.action (new SkillActionData (this, GetBest(dir)));
+				break;
+			case SkillTarget.Usable:
+				action.action (new SkillActionData (this, canUse));
+				break;
+			case SkillTarget.Self:
+				action.action (new SkillActionData (this, this));
+				break;
 			}
 		}
 	}
@@ -1123,7 +1218,7 @@ public class ICharacter : MonoBehaviour
 
 		PrepareRend ();
 
-		if (!IGame.isNew || status.characterName == "Player") {
+		if (!SGame.isNew || status.characterName == "Player") {
 			agent.Warp (status.position);
 			trans.eulerAngles = Vector3.up * status.euler_y;
 		} else {
@@ -1137,9 +1232,9 @@ public class ICharacter : MonoBehaviour
 		Renderer[] rends = GetComponentsInChildren<SkinnedMeshRenderer> ();
 
 		if (rends.Length > 1) {
-			IPersonView.SetToManyRenderer (status, rends);
+			PersonView.SetToManyRenderer (status, rends);
 		} else {
-			IPersonView.SetToRenderer (status, main_render);
+			PersonView.SetToRenderer (status, main_render);
 		}
 	}
 	public bool isPlayer
@@ -1251,7 +1346,7 @@ public class ICharacter : MonoBehaviour
 
 			for (int i = 0; i < chars.Length; i++) {
 				float dist_cur = (chars [i].trans.position - trans.position).magnitude;
-				if (dist_cur < dist && chars[i].status.name != "Player" && !(IReputation.GetEnemity(chars[i].status, status) > 1)) {
+				if (dist_cur < dist && chars[i].status.name != "Player" && !(Reputation.GetEnemity(chars[i].status, status) > 1)) {
 					finded = chars [i];
 					dist = dist_cur;
 				}
@@ -1316,12 +1411,14 @@ public class ICharacter : MonoBehaviour
 		Vector3 v = lookVector;
 		v = new Vector3 (v.x, trans.position.y, v.z);
 		v = v - trans.position;
-		Quaternion next = Quaternion.LookRotation (v);
-		trans.rotation = Quaternion.Slerp (trans.rotation, next, 0.4f);
-		if (Vector3.Angle (trans.forward, v) < 5) {
-			CancelInvoke ("LookToSettedDirection");
-		} else {
-			Invoke ("LookToSettedDirection", 0.1f);
+		if (v.magnitude > 0) {
+			Quaternion next = Quaternion.LookRotation (v);
+			trans.rotation = Quaternion.Slerp (trans.rotation, next, 0.4f);
+			if (Vector3.Angle (trans.forward, v) < 5) {
+				CancelInvoke ("LookToSettedDirection");
+			} else {
+				Invoke ("LookToSettedDirection", 0.1f);
+			}
 		}
 	}
 	private void Attack_End () {
@@ -1350,31 +1447,34 @@ public class ICharacter : MonoBehaviour
 		int rnd = 0;
 		int dmg = 0;
 		switch (status.iType) {
-		case IClassType.Monk:
+		case ClassType.Monk:
 			procent = 20 + 5 * status.level;
 			rnd = UnityEngine.Random.Range (0, 100);
 			if (rnd < procent) {
-				IDamageType type = (IDamageType)UnityEngine.Random.Range (0, 5);
+				DamageType type = (DamageType)UnityEngine.Random.Range (0, 5);
 				dmg = status.damage_melee;
 				whom.ApplyDamage (dmg, type);
 			}
 			break;
-		case IClassType.Inquisitor:
+		case ClassType.Inquisitor:
 			dmg = 3 * status.level;
 			procent = 25;
 			rnd = UnityEngine.Random.Range (0, 100);
 			if (rnd < procent) {
-				whom.ApplyDamage (dmg, IDamageType.Fire);
+				whom.ApplyDamage (dmg, DamageType.Fire);
 			}
 			break;
-		case IClassType.Palladin:
+		case ClassType.Palladin:
 			dmg = 5 * status.level;
 			procent = 15;
 			rnd = UnityEngine.Random.Range (0, 100);
 			if (rnd < procent) {
-				whom.ApplyDamage (dmg, IDamageType.Magic);
+				whom.ApplyDamage (dmg, DamageType.Magic);
 			}
 			break;
+		}
+		foreach (var item in status.effects) {
+			item.preAttack (whom);
 		}
 	}
 	private void Attack_Damage_Set () {
@@ -1383,24 +1483,9 @@ public class ICharacter : MonoBehaviour
 			if (tacked && !agent.Raycast(tacked.trans.position, out hit)) {
 				Vector3 delta = tacked.trans.position - trans.position;
 				if (Vector3.Angle(trans.forward, delta.normalized) < 20 && delta.magnitude < 1.75f) {
-					tacked.ApplyDamage (status.damage_melee, IDamageType.Melee);
+					tacked.ApplyDamage (status.damage_melee, DamageType.Melee);
 					Attack_SpetialDamage_Set (tacked);
-					if (!(IReputation.GetEnemity(tacked.status, status) > 1)) {
-						switch (status.reputationType) {
-						case IReputationType.Bandit:
-							status.reputationType = IReputationType.Monster;
-							break;
-						case IReputationType.People:
-							status.reputationType = IReputationType.Bandit;
-							break;
-						case IReputationType.Cleric:
-							status.reputationType = IReputationType.People;
-							break;
-						case IReputationType.Mage:
-							status.reputationType = IReputationType.Monster;
-							break;
-						}
-					}
+					status.SetDamageLawEvent (tacked.status);
 				}
 			}
 		}
@@ -1415,9 +1500,9 @@ public class ICharacter : MonoBehaviour
 		return;
 	}
 	public void ApplyDamage (int damage) {
-		ApplyDamage (damage, IDamageType.Just);
+		ApplyDamage (damage, DamageType.Just);
 	}
-	public void ApplyDamage (int damage, IDamageType dmgType) {
+	public void ApplyDamage (int damage, DamageType dmgType) {
 		react_clip_num = UnityEngine.Random.Range (0.0f, 1.0f);
 		combatState = 5;
 		if (this) {
@@ -1431,29 +1516,54 @@ public class ICharacter : MonoBehaviour
 		}
 		int app = status.ApplyDamage (damage, dmgType);
 		Color clr = Color.yellow;
+
+		if (dmgType == DamageType.Melee && app > 0) {
+			DropBlood ();
+		}
+
 		switch (dmgType) {
-		case IDamageType.Air:
+		case DamageType.Air:
 			clr = Color.gray;
 			break;
-		case IDamageType.Earth:
+		case DamageType.Earth:
 			clr = new Color (0.8f, 0.2f, 0.2f);
 			break;
-		case IDamageType.Fire:
+		case DamageType.Fire:
 			clr = new Color (0.9f, 0.5f, 0.5f);
 			break;
-		case IDamageType.Magic:
+		case DamageType.Magic:
 			clr = Color.cyan;
 			break;
-		case IDamageType.Melee:
+		case DamageType.Melee:
 			clr = Color.red;
 			break;
-		case IDamageType.Water:
+		case DamageType.Water:
 			clr = Color.blue;
 			break;
 		}
 		if (app > 0) {
 			MyDebug.Log ("Получен урон (" + app + ")", clr, this);
 		}
+		foreach (var item in status.effects) {
+			item.onDamaged (this);
+		}
+	}
+	private void DropBlood () {
+		GameObject pref = Resources.Load<GameObject> ("Prefabs/Blood");
+		GameObject blood = Instantiate (pref, trans.position, Quaternion.identity);
+		Destroy (blood, 6f);
+	}
+	public static float GetSpellClipFloat (ISpellType type) {
+		float clip = 0;
+		switch (type) {
+		case ISpellType.Target:
+			clip = 1;
+			break;
+		case ISpellType.Radian:
+			clip = 2;
+			break;
+		}
+		return clip / 12f;
 	}
 	private void Animate () {
 		combatState -= Time.deltaTime;
@@ -1480,7 +1590,7 @@ public class ICharacter : MonoBehaviour
 		}
 		anims.SetFloat ("ASP", asp);
 		anims.SetFloat ("Combat", combat);
-		weaponImage.texture = IItemAsset.LoadTexture (status.weapon);
+		weaponImage.texture = ItemsAsset.LoadTexture (status.weapon);
 	}
 
 	public bool dead
@@ -1545,40 +1655,61 @@ public class ICharacter : MonoBehaviour
 		ICharacter finded = null;
 		ICharacter[] all = charactersAll.ToArray();
 		float dist = 15;
-		for (int i = 0; i < all.Length; i++) {
-			float dist_cur = (all [i].trans.position - trans.position).magnitude;
-			if (dist_cur < dist && all[i] != this && IReputation.GetEnemity(all[i].status, status) > 1
-				&& !Physics.Linecast(trans.position, all[i].trans.position)) {
-				finded = all [i];
-				dist = dist_cur;
-			}
+		finded = all.Where ((ICharacter ch) => (ch.trans.position - trans.position).magnitude < dist &&
+		ch != this).
+		Where ((ICharacter ch) => Reputation.GetEnemity (ch.status, status) > 1).
+		Where ((ICharacter ch) => !Physics.Linecast (trans.position, ch.trans.position)).
+		OrderBy ((ICharacter ch) => (ch.trans.position - trans.position).magnitude).FirstOrDefault ();
+		return finded;
+	}
+	public Vector3 position
+	{
+		get {
+			return trans.position + IControl.headHeight;
 		}
+	}
+	public ICharacter GetBest (Vector3 direction) {
+		ICharacter[] chars = ICharacter.charactersAll.ToArray ();
+		ICharacter f = null;
+
+		float dist = 2;
+		float angle = 60;
+
+		Vector3 pos = position;
+
+		f = chars.Where ((ICharacter arg) => arg != this && ((arg.position - pos).magnitude) < dist &&
+			Vector3.Angle ((arg.position - pos), direction) < angle
+			&&
+			!Physics.Linecast (pos, arg.position, LayerMask.GetMask ("Default")))
+			.OrderBy ((ICharacter arg) => ((pos - arg.position).magnitude)).OrderBy (
+				(ICharacter arg) => Vector3.Angle ((arg.position - pos), direction)).FirstOrDefault();
+
+		return f;
+	}
+	public ICharacter GetNearestAlly () {
+		ICharacter finded = null;
+		ICharacter[] all = charactersAll.ToArray();
+		float dist = 15;
+		finded = all.Where ((ICharacter ch) => (ch.trans.position - trans.position).magnitude < dist &&
+			ch != this).
+			Where ((ICharacter ch) => !(Reputation.GetEnemity (ch.status, status) > 1)).
+			Where ((ICharacter ch) => !Physics.Linecast (trans.position, ch.trans.position)).
+			OrderBy ((ICharacter ch) => (ch.trans.position - trans.position).magnitude).FirstOrDefault ();
 		return finded;
 	}
 	public static ICharacter GetNearestFromPoint (Vector3 point, ICharacter mask, float maxDist) {
 		ICharacter finded = null;
 		ICharacter[] all = charactersAll.ToArray();
 		float dist = maxDist;
-		for (int i = 0; i < all.Length; i++) {
-			float dist_cur = (all [i].trans.position - point).magnitude;
-			if (dist_cur < dist && all[i] != mask) {
-				finded = all [i];
-				dist = dist_cur;
-			}
-		}
+		finded = all.Where ((ICharacter ch) => (ch.trans.position - point).magnitude < dist && ch != mask).
+			OrderBy ((ICharacter ch) => (ch.trans.position - point).magnitude).FirstOrDefault ();
 		return finded;
 	}
 	public static ICharacter[] GetNearestFromPointAll (Vector3 point, ICharacter mask, float maxDist) {
-		List<ICharacter> chars = new List<ICharacter> ();
 		ICharacter[] all = charactersAll.ToArray();
 		float dist = maxDist;
-		for (int i = 0; i < all.Length; i++) {
-			float dist_cur = (all [i].trans.position - point).magnitude;
-			if (dist_cur < dist && all[i] != mask) {
-				chars.Add (all[i]);
-			}
-		}
-		return chars.ToArray();
+		all = all.Where ((ICharacter ch) => (ch.trans.position - point).magnitude < dist && ch != mask).ToArray ();
+		return all;
 	}
 	public void AttackNearest (Vector3 point) {
 		ICharacter nearest = GetNearestFromPoint(point, this, 1.25f);
@@ -1590,13 +1721,13 @@ public class ICharacter : MonoBehaviour
 	private void Spell_End () {
 		return;
 	}
-	public void CastSpell (Vector3 point) {
+	public void CastSpell (ICharacter ch, ISpellType type, ISpellEffect eff) {
 		if (!inCombat) {
-			ICharacter ch = GetNearestFromPoint (point, this, 0.5f);
 			if (status.rune > -1) {
-				IItem it = IItemAsset.items [status.rune];
-				ISpellRune r = IItem.FromItemType (it.type);
-				ISpell sp = new ISpell (ISpellType.Target, ISpellEffect.Ball, r, status.damage_spell, 5);
+				Vector3 point = ch ? ch.trans.position : trans.position;
+				Item it = ItemsAsset.items [status.rune];
+				ISpellRune r = Item.FromItemType (it.type);
+				ISpell sp = new ISpell (type, eff, r, status.damage_spell, 5);
 				ISpellData.spells [it.value - 1].onCastSpell.Invoke (this, ch, point, sp);
 				lookVector = point;
 				Invoke ("Spell_End", 1.5f);
@@ -1604,6 +1735,7 @@ public class ICharacter : MonoBehaviour
 				if (!dead) {
 					anims.Play ("Combat");
 				}
+				spell_clip_num = GetSpellClipFloat (sp.spellType);
 			}
 		}
 	}
@@ -1627,23 +1759,23 @@ public class ICharacter : MonoBehaviour
 		direction = IControl.FromCameraAxes (direction);
 		MoveAt (direction);
 	}
-	public void CreateRune (IItemType itemType) {
+	public void CreateRune (ItemType itemType) {
 		if (status.spellsToday > 0) {
 			int itemIndex = 0;
 			switch (itemType) {
-			case IItemType.ScrollOfAir:
+			case ItemType.ScrollOfAir:
 				itemIndex = 8;
 				break;
-			case IItemType.ScrollOfEarth:
+			case ItemType.ScrollOfEarth:
 				itemIndex = 7;
 				break;
-			case IItemType.ScrollOfFire:
+			case ItemType.ScrollOfFire:
 				itemIndex = 5;
 				break;
-			case IItemType.ScrollOfWater:
+			case ItemType.ScrollOfWater:
 				itemIndex = 6;
 				break;
-			case IItemType.ScrollOfGod:
+			case ItemType.ScrollOfGod:
 				itemIndex = 9;
 				break;
 			}
@@ -1653,59 +1785,59 @@ public class ICharacter : MonoBehaviour
 	}
 	public void UseItem (int index) {
 
-		IItem item = IItemAsset.items [status.items [index]];
+		Item item = ItemsAsset.items [status.items [index]];
 
 		switch (item.type) {
-		case IItemType.Amulet :
+		case ItemType.Amulet :
 			status.amulet = status.items[index];
 			break;
-		case IItemType.Food :
+		case ItemType.Food :
 
 			break;
-		case IItemType.Weapon :
+		case ItemType.Weapon :
 			if (status.weapon > -1) {
 				AddItem (status.weapon);
 			}
 			status.weapon = status.items[index];
 			break;
-		case IItemType.Armor :
+		case ItemType.Armor :
 			if (status.armor > -1) {
 				AddItem (status.armor);
 			}
 			status.armor = status.items[index];
 			break;
-		case IItemType.ScrollOfAir :
+		case ItemType.ScrollOfAir :
 			if (status.rune > -1) {
 				AddItem (status.rune);
 			}
 			status.rune = status.items[index];
 			break;
-		case IItemType.ScrollOfEarth :
+		case ItemType.ScrollOfEarth :
 			if (status.rune > -1) {
 				AddItem (status.rune);
 			}
 			status.rune = status.items[index];
 			break;
-		case IItemType.ScrollOfFire :
+		case ItemType.ScrollOfFire :
 			if (status.rune > -1) {
 				AddItem (status.rune);
 			}
 			status.rune = status.items[index];
 			break;
-		case IItemType.ScrollOfGod :
+		case ItemType.ScrollOfGod :
 			if (status.rune > -1) {
 				AddItem (status.rune);
 			}
 			status.rune = status.items[index];
 			break;
-		case IItemType.ScrollOfWater :
+		case ItemType.ScrollOfWater :
 			if (status.rune > -1) {
 				AddItem (status.rune);
 			}
 			status.rune = status.items[index];
 			break;
 		}
-		if (item.type != IItemType.None) {
+		if (item.type != ItemType.None) {
 			RemoveItem (index);
 		}
 	}
@@ -1749,37 +1881,37 @@ public class ICharacter : MonoBehaviour
 			status.items = ints.ToArray ();
 		}
 	}
-	public void BackToInv (IItemType type) {
+	public void BackToInv (ItemType type) {
 		switch (type) {
-		case IItemType.Amulet:
+		case ItemType.Amulet:
 			AddItem (status.amulet);
 			status.amulet = -1;
 			break;
-		case IItemType.Armor:
+		case ItemType.Armor:
 			AddItem (status.armor);
 			status.armor = -1;
 			break;
-		case IItemType.Weapon:
+		case ItemType.Weapon:
 			AddItem (status.weapon);
 			status.weapon = -1;
 			break;
-		case IItemType.ScrollOfAir:
+		case ItemType.ScrollOfAir:
 			AddItem (status.rune);
 			status.rune = -1;
 			break;
-		case IItemType.ScrollOfEarth:
+		case ItemType.ScrollOfEarth:
 			AddItem (status.rune);
 			status.rune = -1;
 			break;
-		case IItemType.ScrollOfFire:
+		case ItemType.ScrollOfFire:
 			AddItem (status.rune);
 			status.rune = -1;
 			break;
-		case IItemType.ScrollOfGod:
+		case ItemType.ScrollOfGod:
 			AddItem (status.rune);
 			status.rune = -1;
 			break;
-		case IItemType.ScrollOfWater:
+		case ItemType.ScrollOfWater:
 			AddItem (status.rune);
 			status.rune = -1;
 			break;

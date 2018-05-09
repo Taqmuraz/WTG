@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class ILocationTransition : IUsable {
 
 	public static void TransitLocation (string name) {
-		IGame.buffer.MoveToLocation (name);
+		SGame.buffer.MoveToLocation (name);
 		int index = SceneUtility.GetBuildIndexByScenePath ("Assets/Scenes/Locations/" + name + ".unity");
 		ISpace.LoadLevel (index);
 	}

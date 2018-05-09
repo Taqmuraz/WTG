@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public struct DebugMessage
 {
 	public string message;
-	public IColor color;
+	public SColor color;
 
 	public DebugMessage (string msg, Color clr) {
 		message = msg;

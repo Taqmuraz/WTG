@@ -23,18 +23,18 @@ public class ItemsDatabase : EditorWindow
 		return File.Exists (path);
 	}
 
-	public static IItem[] items = new IItem[0];
+	public static Item[] items = new Item[0];
 
-	public static IItem[] LoadBasicItems () {
-		return IItemAsset.items;
+	public static Item[] LoadBasicItems () {
+		return ItemsAsset.items;
 	}
 
-	public static IItem[] LoadSaved () {
-		IItem[] its = new IItem[0];
+	public static Item[] LoadSaved () {
+		Item[] its = new Item[0];
 		if (Exist()) {
 			BinaryFormatter bf = new BinaryFormatter ();
 			FileStream file = File.Open (path, FileMode.Open);
-			its = (IItem[])bf.Deserialize (file);
+			its = (Item[])bf.Deserialize (file);
 			file.Close ();
 		}
 		return its;
@@ -46,19 +46,18 @@ public class ItemsDatabase : EditorWindow
 		FileStream file = File.Create (path);
 		bf.Serialize (file, items);
 		file.Close ();
-		Debug.Log ("Saved at : " + path);
 	}
 
 	public static void AddItem () {
-		IItem[] its = new IItem[items.Length + 1];
+		Item[] its = new Item[items.Length + 1];
 		for (int i = 0; i < items.Length; i++) {
 			its [i] = items [i];
 		}
-		its [its.Length - 1] = new IItem (0, 0, "no name", IItemType.Armor);
+		its [its.Length - 1] = new Item (0, 0, "no name", ItemType.Armor);
 		items = its;
 	}
 	public static void RemoveItem (int index) {
-		List<IItem> its = new List<IItem> ();
+		List<Item> its = new List<Item> ();
 		its.AddRange (items);
 		its.RemoveAt (index);
 		items = its.ToArray ();
@@ -67,7 +66,7 @@ public class ItemsDatabase : EditorWindow
 	public Vector2 scroll;
 
 	private void OnGUI () {
-		IItem[] basicItems = LoadBasicItems ();
+		Item[] basicItems = LoadBasicItems ();
 		if (Exist ()) {
 			if (GUILayout.Button ("LoadFromFile")) {
 				items = LoadSaved ();
@@ -78,7 +77,7 @@ public class ItemsDatabase : EditorWindow
 			GUILayout.Label ("Basic items : ");
 			for (int i = 0; i < basicItems.Length; i++) {
 				GUILayout.Box ("" + '\n' + basicItems [i].name);
-				GUILayout.Box (IItemAsset.LoadTexture(IItemAsset.GetIDByName(basicItems[i].name)));
+				GUILayout.Box (ItemsAsset.LoadTexture(ItemsAsset.GetIDByName(basicItems[i].name)));
 				GUILayout.Label (basicItems [i].intro);
 				GUILayout.Label ("Cost : " + basicItems [i].sellCount);
 				GUILayout.Label ("ID : " + i);
@@ -94,7 +93,7 @@ public class ItemsDatabase : EditorWindow
 				items [i].intro = EditorGUILayout.TextArea (items [i].intro);
 				items [i].sellCount = EditorGUILayout.IntField ("Item cost", items [i].sellCount);
 				items [i].value = EditorGUILayout.IntField ("Item value", items [i].value);
-				items [i].type = (IItemType)EditorGUILayout.EnumPopup (items [i].type);
+				items [i].type = (ItemType)EditorGUILayout.EnumPopup (items [i].type);
 				if (GUILayout.Button("Remove item")) {
 					RemoveItem (i);
 				}
