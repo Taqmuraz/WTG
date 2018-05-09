@@ -12,7 +12,7 @@ public class SkillButton : MonoBehaviour, IPointerClickHandler {
 
 	public RawImage img;
 
-	private void Start () {
+	public void Start () {
 		img = GetComponent<RawImage> ();
 	}
 

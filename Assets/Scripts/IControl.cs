@@ -182,6 +182,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public void SetToQuickSkill (Skill skill) {
 		character.status.skills.quickSkills[currentToSetSkill] = skill.name;
 		SetTextWithScales (skillInfo, skill.Info ());
+		selectSkillButtons [currentToSetSkill].Start ();
 		selectSkillButtons[currentToSetSkill].SetWithSkill(skill);
 	}
 
