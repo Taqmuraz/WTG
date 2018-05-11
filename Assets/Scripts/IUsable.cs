@@ -18,7 +18,7 @@ public class IUsable : MonoBehaviour {
 	{
 		string t = "Взаимодействовать : " + toUse.GetType ().Name;
 		if (toUse is IDoor) {
-			t = "Дверь";
+			t = ((IDoor)toUse).data.locked ? "Дверь (Заперто)" : "Дверь";
 		}
 		if (toUse is IChest) {
 			t = "Сундук";

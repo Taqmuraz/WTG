@@ -206,6 +206,12 @@ public class Slot
 			return (Skill)identificator;
 		}
 	}
+	public SkillEffect effect
+	{
+		get {
+			return (SkillEffect)identificator;
+		}
+	}
 	private object identificator;
 	public int count;
 
@@ -780,6 +786,17 @@ public class Status : Saveble
 		damage = (damage * imm) / 100;
 		health -= damage;
 		return damage;
+	}
+
+	public void AddItem (int id) {
+		List<int> its = items.ToList();
+		its.Add(id);
+		items = its.ToArray ();
+	}
+	public void RemoveItemAt (int index) {
+		List<int> its = items.ToList();
+		its.RemoveAt(index);
+		items = its.ToArray ();
 	}
 
 	public void AddEffect (SkillEffect effect) {
@@ -1842,9 +1859,7 @@ public class ICharacter : MonoBehaviour
 		}
 	}
 	public void RemoveItem (int index) {
-		List<int> ints = status.items.ToList<int> ();
-		ints.RemoveAt (index);
-		status.items = ints.ToArray ();
+		status.RemoveItemAt (index);
 	}
 	public void DropItem (int index) {
 
@@ -1876,9 +1891,7 @@ public class ICharacter : MonoBehaviour
 	}
 	public void AddItem (int id) {
 		if (id > -1) {
-			List<int> ints = status.items.ToList<int> ();
-			ints.Add (id);
-			status.items = ints.ToArray ();
+			status.AddItem (id);
 		}
 	}
 	public void BackToInv (ItemType type) {

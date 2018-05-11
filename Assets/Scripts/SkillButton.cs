@@ -11,13 +11,34 @@ public class SkillButton : MonoBehaviour, IPointerClickHandler {
 	};
 
 	public RawImage img;
+	private GameObject obj;
+
+	public void SetActive (bool active) {
+		obj.SetActive (active);
+	}
+
+	private bool locked_getter;
+	public bool locked
+	{
+		get {
+			return locked_getter;
+		}
+		set {
+			locked_getter = value;
+			img.color = !locked_getter ? Color.white : Color.gray;
+		}
+	}
 
 	public void Start () {
+		obj = gameObject;
 		img = GetComponent<RawImage> ();
+		img = img ? img : GetComponentInChildren<RawImage> ();
 	}
 
 	public void OnPointerClick (PointerEventData data) {
-		onClick ();
+		if (!locked) {
+			onClick ();
+		}
 	}
 
 	public void SetWithSkill (Skill skill) {

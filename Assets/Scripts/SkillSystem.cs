@@ -168,9 +168,13 @@ public struct Skill
 	public Texture image
 	{
 		get {
-			Texture tex = Resources.Load<Texture> ("Sprites/Skills/" + name);
-			return tex ? tex : ItemsAsset.LoadTexture (-1);
+			return LoadImageByName (name);
 		}
+	}
+
+	public static Texture LoadImageByName (string name) {
+		Texture tex = Resources.Load<Texture> ("Sprites/Skills/" + name);
+		return tex ? tex : ItemsAsset.LoadTexture (-1);
 	}
 
 	public Skill (string nam, ClassType ava, SkillAction act, SkillTarget t) {
@@ -183,6 +187,7 @@ public struct Skill
 [System.Serializable]
 public class SkillEffect
 {
+	[System.Serializable]
 	public delegate void EffectAction (ICharacter target);
 	public string effectName { get; private set; }
 	public EffectAction everySecUpdate { get; private set; }
@@ -243,7 +248,7 @@ public class SkillEffect
 		}, 10 + caster.status.level);
 	}
 	public static SkillEffect Unkillable (int time) {
-		return new SkillEffect ("Unkillable", delegate(ICharacter target) {
+		return new SkillEffect ("RiseUp", delegate(ICharacter target) {
 			return;
 		}, delegate(ICharacter target) {
 			target.status.Heal(0);

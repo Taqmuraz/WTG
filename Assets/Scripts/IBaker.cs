@@ -11,6 +11,16 @@ public class IBaker : MonoBehaviour {
 			//InstantiatePlayer((IStatus)IGame.buffer.FindByName ("Player"));
 			SetIndexesForDoors ();
 			//IQuest.current = IQuest.GetStart ();
+			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
+			foreach (var item in chars) {
+				Status st = CharacterDataManager.LoadByName (item.status.name);
+				if (st != null) {
+					item.status = st;
+					Debug.Log ("Status finded : " + item.status.name);
+				} else {
+					Debug.Log ("Status not found : " + item.status.name);
+				}
+			}
 		} else {
 			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
 			for (int i = 0; i < chars.Length; i++) {

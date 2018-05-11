@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 [System.Serializable]
 public enum ItemType
@@ -247,6 +248,19 @@ public class ItemsAsset
 		}
 
 		return toAdd.ToArray ();
+	}
+
+	public static string[] GetNames (Item[] items) {
+		List<string> a = new List<string> ();
+		a.Add ("None");
+		a.AddRange (
+			items.Select ((Item item) => item.name)
+		);
+		return a.ToArray ();
+	}
+
+	public static Item[] GetOfType (params ItemType[] types) {
+		return items.Where ((Item it) => types.Contains (it.type)).ToArray();
 	}
 
 	public static int[] GetAllInventory ()

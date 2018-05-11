@@ -33,6 +33,8 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public RectTransform slotsMask;
 	//public Scrollbar inventoryScroll;
 	public int[] currentItems;
+	public SkillEffect[] currentEffects;
+	public string[] currentQuickSkills;
 	public int currentLookableItemIndex = -1;
 	private int probeIndexLookable = 0;
 	public Text itemsInfo;
@@ -91,6 +93,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public RectTransform lootMineSlotsParent;
 	public RectTransform dialogButtonsParent;
 	public RectTransform skillButtonsParent;
+	public RectTransform effectsParent;
 
 	public SkillButton[] skillButtons;
 	public SkillButton[] selectSkillButtons;
@@ -288,6 +291,8 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			item.img.enabled = false;
 		}
 
+		SetSkillButtonsWithMayness ();
+
 		for (int i = 0; i < skills.Length; i++) {
 			skillButtons [i].img.texture = skills [i].image;
 			Skill sk = skills [i];
@@ -339,9 +344,21 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			}
 		}
 	}
+	private void SetSkillButtonsWithMayness () {
+		for (int i = 0; i < character.status.skills.quickSkills.Length; i++) {
+			SkillButton item = skillButtons [i];
+			item.locked = character.status.spellsToday < 1;
+			item.SetActive (SkillSystem.HasInDatabase(character.status.skills.quickSkills[i]));
+		}
+	}
 	private void InterfaceMotor () {
 
 		bool haveToMinUpdate = false;
+
+		if (!currentQuickSkills.SequenceEqual(character.status.skills.quickSkills)) {
+			haveToMinUpdate = true;
+			currentQuickSkills = character.status.skills.quickSkills;
+		}
 
 		if (MyDebug.haveToUpdate && MyDebug.messages.Count > 0) {
 			SetTextWithScales (messagesText, MyDebug.messages[MyDebug.messages.Count - 1].message);
@@ -367,6 +384,14 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		int[] items = character.status.items;
 		//float delta = Mathf.Abs(slotsParent.rect.height - slotsMask.rect.height);
 		//slotsParent.anchoredPosition = Vector2.up * delta * inventoryScroll.value;
+
+		if (!currentEffects.SequenceEqual(character.status.effects.ToArray())) {
+			haveToMinUpdate = true;
+
+			FillItemsTo<SkillEffect> (effectsParent, character.status.effects);
+
+			currentEffects = character.status.effects.ToArray ();
+		}
 
 		if (!currentItems.Equals(items)) {
 
@@ -592,7 +617,8 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		public enum SlotType
 		{
 			Item,
-			Skill
+			Skill,
+			Effect
 		}
 		public Button button;
 		public int id
@@ -609,12 +635,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 		}
 		private object identificator;
 
-		public InventorySlot(int ID, Button bt)
-		{
-			identificator = ID;
-			button = bt;
-		}
-		public InventorySlot(Skill ID, Button bt)
+		public InventorySlot(object ID, Button bt)
 		{
 			identificator = ID;
 			button = bt;
@@ -627,20 +648,31 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 		InventorySlot.SlotType sType = InventorySlot.SlotType.Item;
 
+		string pref = "Prefabs/Slot";
+
 		if (typeof(T) == typeof(Skill)) {
 			sType = InventorySlot.SlotType.Skill;
 		}
+		if (typeof(T) == typeof(SkillEffect)) {
+			sType = InventorySlot.SlotType.Effect;
+			pref = "Prefabs/TimeoutSlot";
+		}
 
-		GameObject prefab = (GameObject)Resources.Load ("Prefabs/Slot");
+		GameObject prefab = (GameObject)Resources.Load (pref);
 		Button[] buttons = parent.GetComponentsInChildren<Button>();
 		for (int i = 0; i < buttons.Length; i++) {
 			Destroy(buttons[i].gameObject);
+		}
+		TimeoutSlot[] tslots = parent.GetComponentsInChildren<TimeoutSlot>();
+		for (int i = 0; i < tslots.Length; i++) {
+			Destroy(tslots[i].gameObject);
 		}
 		List<InventorySlot> bts = new List<InventorySlot> ();
 
 		List<Slot> upd = new List<Slot> ();
 
-		if (sType == InventorySlot.SlotType.Item) {
+		switch (sType) {
+		case InventorySlot.SlotType.Item:
 			IEnumerable<int> its = items.Cast<int> ();
 			List<int> has = new List<int> ();
 			foreach (var item in its) {
@@ -660,11 +692,19 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 					}
 				}
 			}
-		} else {
-			IEnumerable<Skill> its = items.Cast<Skill> ();
-			foreach (var item in its) {
+			break;
+		case InventorySlot.SlotType.Skill:
+			IEnumerable<Skill> its_s = items.Cast<Skill> ();
+			foreach (var item in its_s) {
 				upd.Add (new Slot (item));
 			}
+			break;
+		case InventorySlot.SlotType.Effect :
+			IEnumerable<SkillEffect> its_e = items.Cast<SkillEffect> ();
+			foreach (var item in its_e) {
+				upd.Add (new Slot (item));
+			}
+			break;
 		}
 
 		float slotSize = prefab.GetComponent<RectTransform>().rect.height;
@@ -683,18 +723,25 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			case InventorySlot.SlotType.Skill:
 				r.texture = upd [i].skill.image;
 				break;
+			case InventorySlot.SlotType.Effect:
+				TimeoutSlot ts = trans.GetComponent<TimeoutSlot> ();
+				ts.Init (upd [i].effect);
+				break;
 			}
 			string num = "";
 			if (upd[i].count > 1) {
 				num = "(" + upd [i].count + ")";
 			}
 			Text t = trans.GetComponentInChildren<Text> ();
-			IFontSetter.SetFont (t);
+			if (t) {
+				
+				IFontSetter.SetFont (t);
 
-			if (sType == InventorySlot.SlotType.Item) {
-				t.text = ItemsAsset.items [upd [i].id].name + num;
-			} else {
-				t.text = upd [i].skill.LitraName ();
+				if (sType == InventorySlot.SlotType.Item) {
+					t.text = ItemsAsset.items [upd [i].id].name + num;
+				} else {
+					t.text = upd [i].skill.LitraName ();
+				}
 			}
 			float w = parent.rect.width;
 			w = w > 0 ? w : parent.parent.GetComponent<RectTransform> ().rect.width;
@@ -702,17 +749,29 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			trans.SetSizeWithCurrentAnchors (RectTransform.Axis.Horizontal, w);
 			Button bt = trans.GetComponent<Button>();
 
-			Color c = Color.white;
+			if (bt) {
+				Color c = Color.white;
 
-			if (sType == InventorySlot.SlotType.Item) {
-				if (!character.status.CanUseItem (upd [i].id)) {
-					c = new Color (1f, 0.5f, 0.5f);
+				if (sType == InventorySlot.SlotType.Item) {
+					if (!character.status.CanUseItem (upd [i].id)) {
+						c = new Color (1f, 0.5f, 0.5f);
+					}
 				}
+
+				bt.image.color = c;
 			}
 
-			bt.image.color = c;
-
-			bts.Add (sType == InventorySlot.SlotType.Item ? new InventorySlot (upd[i].id, bt) : new InventorySlot (upd[i].skill, bt));
+			switch (sType) {
+			case InventorySlot.SlotType.Item:
+				bts.Add (new InventorySlot (upd [i].id, bt));
+				break;
+			case InventorySlot.SlotType.Skill:
+				bts.Add (new InventorySlot (upd [i].skill, bt));
+				break;
+			case InventorySlot.SlotType.Effect:
+				bts.Add (new InventorySlot (upd [i].effect, bt));
+				break;
+			}
 		}
 
 		return bts.ToArray ();

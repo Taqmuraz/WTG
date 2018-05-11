@@ -57,6 +57,7 @@ public class ArenaQuest : MonoBehaviour {
 	private bool bothEntered = false;
 
 	public void PrepareBattle () {
+		FindEnemies ();
 		main_character.agent.Warp (playerStartPoint.position);
 		enemies[iquest.enemy_index].agent.Warp (enemyStartPoint.position);
 		preparedToBattle = true;
@@ -75,6 +76,14 @@ public class ArenaQuest : MonoBehaviour {
 		preparedToBattle = false;
 		main_character.AddMoney (win_scores [iquest.enemy_defeated_index]);
 		iquest.cost_getted_index = iquest.enemy_defeated_index;
+	}
+
+	private void FindEnemies () {
+		ICharacter[] ch = new ICharacter[enemies_names.Length];
+		for (int i = 0; i < ch.Length; i++) {
+			ch [i] = ICharacter.GetByName (enemies_names [i]);
+		}
+		enemies = ch;
 	}
 
 	private void Update () {
@@ -108,11 +117,7 @@ public class ArenaQuest : MonoBehaviour {
 					}
 				}
 			} else {
-				ICharacter[] ch = new ICharacter[enemies_names.Length];
-				for (int i = 0; i < ch.Length; i++) {
-					ch [i] = ICharacter.GetByName (enemies_names [i]);
-				}
-				enemies = ch;
+				FindEnemies ();
 			}
 		} else {
 			main_character = ICharacter.GetPlayer ();
