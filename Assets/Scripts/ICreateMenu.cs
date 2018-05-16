@@ -92,7 +92,12 @@ public class ICreateMenu : MonoBehaviour {
 		if (status.iType == ClassType.Simple) {
 			status.iType = ClassType.Monk;
 		}
-		IControl.SetTextWithScales (classInfo, classesTexts [(int)status.iType - 1].text);
+		string skillsInfo = "" + '\n' + '\n' + "Особые умения : ";
+		Skill[] skills = status.skills.forMyClass;
+		foreach (var item in skills) {
+			skillsInfo = "" + '\n' + '\n' + skillsInfo + item.Info ();
+		}
+		IControl.SetTextWithScales (classInfo, classesTexts [(int)status.iType - 1].text + skillsInfo);
 		Status n = new Status (ClassType.Simple);
 		n.iRace = status.iRace;
 		IControl.SetTextWithScales (raceInfo, racesTexts [(int)status.iRace].text + '\n' + '\n' + n.immunity.ToText ());

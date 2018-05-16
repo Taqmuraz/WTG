@@ -16,9 +16,6 @@ public class IBaker : MonoBehaviour {
 				Status st = CharacterDataManager.LoadByName (item.status.name);
 				if (st != null) {
 					item.status = st;
-					Debug.Log ("Status finded : " + item.status.name);
-				} else {
-					Debug.Log ("Status not found : " + item.status.name);
 				}
 			}
 		} else {

@@ -20,7 +20,6 @@ public class CharacterEditWindow : EditorWindow
 	public ICharacter editing;
 	public Status status;
 	private string loadName = "";
-	private int rep = 0;
 	private int itemToCreate = 0;
 
 	private void OnGUI () {
@@ -79,12 +78,12 @@ public class CharacterEditWindow : EditorWindow
 		using (EditorGUILayout.ScrollViewScope s = new EditorGUILayout.ScrollViewScope (itemsScroll)) {
 			itemsScroll = s.scrollPosition;
 			for (int i = 0; i < status.items.Length; i++) {
-				status.items [i] = (int)EditorGUILayout.Popup ("Item_" + i, status.items [i], ItemsAsset.GetNames (ItemsAsset.items));
+				status.items [i] = DrawItemSelect("Item_" + status.items[i], status.items[i], System.Enum.GetValues (typeof (ItemType)).Cast<ItemType> ().ToArray());
 				if (GUILayout.Button("Remove")) {
 					status.RemoveItemAt (i);
 				}
 			}
-			itemToCreate = (int)EditorGUILayout.Popup ("Item to add : ", itemToCreate, ItemsAsset.GetNames (ItemsAsset.items));
+			itemToCreate = DrawItemSelect ("Item to create_" + itemToCreate, itemToCreate, System.Enum.GetValues (typeof (ItemType)).Cast<ItemType> ().ToArray());
 			if (GUILayout.Button("Add item")) {
 				status.AddItem (itemToCreate);
 			}

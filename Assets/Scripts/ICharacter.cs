@@ -481,6 +481,10 @@ public class Status : Saveble
 		effects [effects.FindIndex ((SkillEffect se) => se.effectName == name)] = newValue;
 	}
 
+	public bool HasEffect (string name) {
+		return effects.FirstOrDefault ((SkillEffect arg) => arg.effectName == name) != null;
+	}
+
 	public void Heal (int points) {
 		health += points;
 		health = Mathf.Clamp(health, 1, maxHealth);
@@ -636,21 +640,24 @@ public class Status : Saveble
 	public int spellsToday
 	{
 		get {
-			if (!canUseRunes) {
-				sptd = 0;
-			}
 			return sptd;
 		}
 		set {
-			if (canUseRunes) {
-				sptd = Mathf.Clamp(value, 0, 10);
-			}
+			sptd = Mathf.Clamp(value, 0, 10);
 		}
 	}
 	public void SetSpellsTodayBy () {
-		int sp = (intellect - 1) / 2 + level / 2;
-		if (iType != ClassType.Wonder) {
-			sp /= 2;
+		int sp = 1;
+		switch (iType) {
+		case ClassType.Wonder:
+			sp = (intellect) / 2 + level / 4;
+			break;
+		case ClassType.Thief:
+			sp = (speedness + intellect) / 4 + level / 10;
+			break;
+		case ClassType.Monk:
+			sp = (speedness + invicibility + strongness) / 6 + level / 5;
+			break;
 		}
 		spellsToday = sp;
 	}
@@ -1224,6 +1231,7 @@ public class ICharacter : MonoBehaviour
 				action.action (new SkillActionData (this, this));
 				break;
 			}
+			status.spellsToday -= 1;
 		}
 	}
 	public void PrepareToGame () {
@@ -1441,7 +1449,7 @@ public class ICharacter : MonoBehaviour
 	private void Attack_End () {
 		return;
 	}
-	private bool inCombat
+	public bool inCombat
 	{
 		get {
 			return attacking || spelling;
@@ -1797,7 +1805,6 @@ public class ICharacter : MonoBehaviour
 				break;
 			}
 			AddItem (itemIndex);
-			status.spellsToday -= 1;
 		}
 	}
 	public void UseItem (int index) {

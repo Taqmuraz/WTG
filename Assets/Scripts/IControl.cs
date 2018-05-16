@@ -98,7 +98,20 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	public SkillButton[] skillButtons;
 	public SkillButton[] selectSkillButtons;
 	public Text skillInfo;
-	private int currentToSetSkill = 0;
+	private int currentToSetSkill
+	{
+		get {
+			return cur_set_skill_getter;
+		}
+		set {
+			cur_set_skill_getter = value;
+			for (int i = 0; i < selectSkillButtons.Length; i++) {
+				selectSkillButtons [i].targeted = i == value;
+			}
+		}
+	}
+	[SerializeField]
+	private int cur_set_skill_getter = -1;
 
 	public Text characterInfoText;
 
@@ -166,7 +179,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				currentToSetSkill = i;
 				SetToQuickSkill (SkillSystem.GetByName(character.status.skills.quickSkills [i]));
 			}
-			currentToSetSkill = 0;
+			currentToSetSkill = -1;
 		}
 
 		stateChanged = true;
@@ -183,10 +196,12 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	}
 
 	public void SetToQuickSkill (Skill skill) {
-		character.status.skills.quickSkills[currentToSetSkill] = skill.name;
 		SetTextWithScales (skillInfo, skill.Info ());
-		selectSkillButtons [currentToSetSkill].Start ();
-		selectSkillButtons[currentToSetSkill].SetWithSkill(skill);
+		if (currentToSetSkill > -1) {
+			character.status.skills.quickSkills[currentToSetSkill] = skill.name;
+			selectSkillButtons [currentToSetSkill].Start ();
+			selectSkillButtons[currentToSetSkill].SetWithSkill(skill);
+		}
 	}
 
 	public void OutDialog () {
@@ -291,8 +306,6 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			item.img.enabled = false;
 		}
 
-		SetSkillButtonsWithMayness ();
-
 		for (int i = 0; i < skills.Length; i++) {
 			skillButtons [i].img.texture = skills [i].image;
 			Skill sk = skills [i];
@@ -347,11 +360,14 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	private void SetSkillButtonsWithMayness () {
 		for (int i = 0; i < character.status.skills.quickSkills.Length; i++) {
 			SkillButton item = skillButtons [i];
-			item.locked = character.status.spellsToday < 1;
-			item.SetActive (SkillSystem.HasInDatabase(character.status.skills.quickSkills[i]));
+			bool has = SkillSystem.HasInDatabase (character.status.skills.quickSkills [i]);
+			item.locked = !(has && SkillSystem.GetByName(character.status.skills.quickSkills[i]).canBeUsed(character));
+			item.SetActive (has);
 		}
 	}
 	private void InterfaceMotor () {
+
+		SetSkillButtonsWithMayness ();
 
 		bool haveToMinUpdate = false;
 
@@ -881,6 +897,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 				string sk = character.status.skills.quickSkills[currentToSetSkill];
 				if (SkillSystem.HasInDatabase(sk)) {
 					SetToQuickSkill(new Skill());
+					currentToSetSkill = -1;
 				}
 			};
 		}

@@ -83,22 +83,27 @@ public class SkillSystem
 				if (data.target) {
 					data.skiller.CastSpell (data.target, ISpellType.Target, ISpellEffect.Ball);
 				}
-			}, SkillTarget.Enemy);
+			}, ((ICharacter ch) => !ch.inCombat && ch.status.rune > -1), SkillTarget.Enemy);
 			skills.Add (simpleSpell);
 
 			// monk
 
 			Skill riseUp = new Skill ("RiseUp", ClassType.Monk, delegate(SkillActionData data) {
 				data.skiller.status.AddEffect(SkillEffect.Unkillable(10 + data.skiller.status.level));
-			}, SkillTarget.Enemy);
+			}, (ICharacter ch) => !ch.status.HasEffect("RiseUp"), SkillTarget.Enemy);
 			skills.Add (riseUp);
 
 			// thief
 
 			Skill poisonWeapon = new Skill ("PoisonWeapon", ClassType.Thief, delegate(SkillActionData data) {
 				data.skiller.status.AddEffect(SkillEffect.PoisonWeapon(data.skiller));
-			}, SkillTarget.Enemy);
+			}, (ICharacter ch) => !ch.status.HasEffect("PoisonWeapon"), SkillTarget.Enemy);
 			skills.Add (poisonWeapon);
+
+			Skill godsPower = new Skill ("GodsPower", ClassType.Cleric, delegate(SkillActionData data) {
+				data.skiller.status.AddEffect(SkillEffect.GodsPower(data.skiller));
+			}, (ICharacter ch) => !ch.status.HasEffect("GodsPower"), SkillTarget.Enemy);
+			skills.Add (godsPower);
 
 			return skills.ToArray ();
 		}
@@ -140,7 +145,10 @@ public struct SkillActionData
 [System.Serializable]
 public struct Skill
 {
+	public delegate bool CanBeUsed (ICharacter ch);
 	public delegate void SkillAction (SkillActionData data);
+
+	public CanBeUsed canBeUsed { get; private set; }
 
 	public SkillTarget targetType { get; private set; }
 
@@ -182,6 +190,14 @@ public struct Skill
 		action = act;
 		availableFor = ava;
 		targetType = t;
+		canBeUsed = ((ICharacter ch) => ch.status.spellsToday > 0);
+	}
+	public Skill (string nam, ClassType ava, SkillAction act, CanBeUsed cbu, SkillTarget t) {
+		name = nam;
+		action = act;
+		availableFor = ava;
+		targetType = t;
+		canBeUsed = ((ICharacter ch) => ch.status.spellsToday > 0 && cbu (ch));
 	}
 }
 [System.Serializable]
@@ -245,6 +261,18 @@ public class SkillEffect
 			return;
 		},delegate(ICharacter target) {
 			target.status.AddEffect(Poison(5 + caster.status.level, caster.status.level));
+		}, 10 + caster.status.level);
+	}
+	public static SkillEffect GodsPower (ICharacter caster) {
+		return new SkillEffect ("GodsPower", delegate(ICharacter target) {
+			return;
+		},delegate(ICharacter target) {
+			return;
+		},delegate(ICharacter target) {
+			target.ApplyDamage(caster.status.level, DamageType.Fire);
+			target.ApplyDamage(caster.status.level, DamageType.Water);
+			target.ApplyDamage(caster.status.level, DamageType.Earth);
+			target.ApplyDamage(caster.status.level, DamageType.Air);
 		}, 10 + caster.status.level);
 	}
 	public static SkillEffect Unkillable (int time) {
