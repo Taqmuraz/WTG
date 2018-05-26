@@ -1156,6 +1156,39 @@ public enum DamageType
 	Melee,
 	Just
 }
+[System.Serializable]
+public class WeaponSlot
+{
+	public RawImage weaponImage { get; private set; }
+	public Transform weaponHold { get; private set; }
+	public GameObject weaponObj { get; private set; }
+	public int id  { get; private set; }
+
+	public WeaponSlot (RawImage image, Transform hold) {
+		weaponImage = image;
+		weaponHold = hold;
+		weaponObj = null;
+		id = -2;
+	}
+
+	public void SetWeapon (int ID)
+	{
+		if (id != ID) {
+			id = ID;
+			GameObject pref = (GameObject)Resources.Load ("Prefabs/Items/Item_" + id);
+			if (weaponObj) {
+				GameObject.Destroy (weaponObj);
+			}
+			if (pref) {
+				weaponObj = GameObject.Instantiate (pref, weaponHold);
+				weaponImage.enabled = false;
+			} else {
+				weaponImage.enabled = true;
+				weaponImage.texture = ItemsAsset.LoadTexture (id);
+			}
+		}
+	}
+}
 
 public class ICharacter : MonoBehaviour
 {
@@ -1168,7 +1201,7 @@ public class ICharacter : MonoBehaviour
 	[SerializeField]
 	private int lastArmor = -1;
 
-	private RawImage weaponImage;
+	public WeaponSlot weaponSlot;
 
 	public void Start () {
 		PrepareToGame ();
@@ -1236,10 +1269,13 @@ public class ICharacter : MonoBehaviour
 	}
 	public void PrepareToGame () {
 
-		weaponImage = GetComponentInChildren<RawImage> ();
-		//weaponImage.rectTransform.parent.localEulerAngles = new Vector3(45, 180, -135);
+		RawImage weaponImage = GetComponentInChildren<RawImage> ();
 
-		weaponImage.raycastTarget = false;
+		Transform weaponHold = weaponImage.transform.parent.parent;
+
+		weaponSlot = new WeaponSlot (weaponImage, weaponHold);
+
+		weaponSlot.weaponImage.raycastTarget = false;
 
 		PrepareRend ();
 
@@ -1249,9 +1285,6 @@ public class ICharacter : MonoBehaviour
 		} else {
 			status.health = status.maxHealth;
 		}
-		/*if (!GetComponent<IShadowCaster> ()) {
-			gameObject.AddComponent<IShadowCaster> ();
-		}*/
 	}
 	public void PrepareRend () {
 		Renderer[] rends = GetComponentsInChildren<SkinnedMeshRenderer> ();
@@ -1615,7 +1648,7 @@ public class ICharacter : MonoBehaviour
 		}
 		anims.SetFloat ("ASP", asp);
 		anims.SetFloat ("Combat", combat);
-		weaponImage.texture = ItemsAsset.LoadTexture (status.weapon);
+		weaponSlot.SetWeapon (status.weapon);
 	}
 
 	public bool dead

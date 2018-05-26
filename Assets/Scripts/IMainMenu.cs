@@ -34,7 +34,7 @@ public class IMainMenu : MonoBehaviour {
 		SetState ();
 		LoadSettings ();
 		SetQualitySettings (settings.quality);
-		float v = (settings.fontSize - 11) / 15f;
+		float v = (settings.fontSize - 11) / 20f;
 		fontSize.value = v;
 		fontSize.onValueChanged.Invoke (v);
 	}
@@ -65,7 +65,7 @@ public class IMainMenu : MonoBehaviour {
 
 		fontSize.onValueChanged.RemoveAllListeners ();
 		fontSize.onValueChanged.AddListener (delegate {
-			int v = 11 + (int)(fontSize.value * 15);
+			int v = 11 + (int)(fontSize.value * 20);
 			fontSize.GetComponentInChildren<Text>().text = "Размер шрифта : " + v;
 			settings.fontSize = v;
 			IFontSetter.SetFontForall();

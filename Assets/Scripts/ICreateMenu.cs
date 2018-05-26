@@ -6,8 +6,8 @@ using UnityEngine.UI;
 [System.Serializable]
 public enum CreateMenuState
 {
-	Class,
 	Race,
+	Class,
 	Params,
 	Colors
 }
@@ -27,7 +27,17 @@ public class ICreateMenu : MonoBehaviour {
 	public Text raceInfo;
 	public Text paramsInfo;
 
-	public CreateMenuState state;
+	private CreateMenuState state_get;
+	public CreateMenuState state
+	{
+		get {
+			return state_get;
+		}
+		set {
+			state_get = value;
+			SetState ();
+		}
+	}
 
 	public Status status = new Status (ClassType.Simple);
 
@@ -35,7 +45,6 @@ public class ICreateMenu : MonoBehaviour {
 
 	public Button[] races;
 	public Button[] classes;
-	public Button[] states;
 	public GameObject[] state_objs;
 	public TextAsset[] racesTexts;
 	public TextAsset[] classesTexts;
@@ -60,10 +69,14 @@ public class ICreateMenu : MonoBehaviour {
 	public Image skinShow;
 	public Image hairShow;
 
+	public Button next;
+	public Button back;
+
 	public Button gender_male;
 	public Button gender_female;
 	public Status.Gender gender;
 	public GameObject genderMenu;
+	public GameObject nameMenu;
 	public GameObject mainMenu;
 	public GameObject raceMaleButtons;
 	public GameObject raceFemaleButtons;
@@ -127,15 +140,22 @@ public class ICreateMenu : MonoBehaviour {
 	private void SetState () {
 		for (int i = 0; i < state_objs.Length; i++) {
 			state_objs[i].SetActive((CreateMenuState)i == state);
-			Color gray = new Color(0.6f, 0.6f, 0.6f, 1);
-
-			if ((CreateMenuState)i == state) {
-				gray = new Color(0.6f, 0.8f, 0.6f, 1);
-			}
-
-			states[i].image.color = gray;
 		}
 		IFontSetter.SetFontForall ();
+	}
+	public void SetStateGlobal (int st) {
+		if (st < 0) {
+			mainMenu.SetActive (false);
+			nameMenu.SetActive (false);
+			genderMenu.SetActive (true);
+			return;
+		}
+		if (st < System.Enum.GetNames (typeof (CreateMenuState)).Length) {
+			state = (CreateMenuState)st;
+		} else {
+			mainMenu.SetActive (false);
+			nameMenu.SetActive (true);
+		}
 	}
 
 	public void SaveAndPlay () {
@@ -168,6 +188,15 @@ public class ICreateMenu : MonoBehaviour {
 	private void PrepareForStart () {
 
 		status.name = "Player";
+
+		next.onClick.RemoveAllListeners ();
+		next.onClick.AddListener (delegate {
+			SetStateGlobal(((int)state) + 1);
+		});
+		back.onClick.RemoveAllListeners ();
+		back.onClick.AddListener (delegate {
+			SetStateGlobal(((int)state) - 1);
+		});
 
 		field.onEndEdit.RemoveAllListeners ();
 		field.onEndEdit.AddListener (delegate {
@@ -294,16 +323,6 @@ public class ICreateMenu : MonoBehaviour {
 				
 				status.iType = cur;
 				ResetParams();
-				
-			});
-		}
-		for (int i = 0; i < states.Length; i++) {
-			states[i].onClick.RemoveAllListeners();
-			CreateMenuState cur = (CreateMenuState)i;
-			states[i].onClick.AddListener(delegate {
-
-				state = cur;
-				SetState();
 				
 			});
 		}
