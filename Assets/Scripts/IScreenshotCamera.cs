@@ -15,12 +15,16 @@ public class IScreenshotCamera : MonoBehaviour {
 
 	private void OnPostRender () {
 		if (captureShot) {
-			int w = cam.pixelWidth;
-			int h = cam.pixelHeight;
+			int w = Screen.currentResolution.width;
+			int h = Screen.currentResolution.height;
 			Rect r = new Rect (0, 0, w, h);
 			Texture2D tex = new Texture2D((int)r.width, (int)r.height);
-			tex.ReadPixels (r, 0, 0);
-			tex.Apply ();
+			try {
+				tex.ReadPixels (r, 0, 0);
+				tex.Apply ();
+			} catch (System.Exception ex) {
+				Debug.Log (ex.Message + '\n' + "At resolution : " + w + ", " + h + ";");
+			}
 			SGame.screenshot = tex.EncodeToPNG ();
 			captureShot = false;
 		}

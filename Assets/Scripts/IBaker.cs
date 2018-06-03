@@ -11,13 +11,6 @@ public class IBaker : MonoBehaviour {
 			//InstantiatePlayer((IStatus)IGame.buffer.FindByName ("Player"));
 			SetIndexesForDoors ();
 			//IQuest.current = IQuest.GetStart ();
-			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
-			foreach (var item in chars) {
-				Status st = CharacterDataManager.LoadByName (item.status.name);
-				if (st != null) {
-					item.status = st;
-				}
-			}
 		} else {
 			ICharacter[] chars = ICharacter.FindObjectsOfType<ICharacter> ();
 			for (int i = 0; i < chars.Length; i++) {
@@ -64,7 +57,7 @@ public class IBaker : MonoBehaviour {
 		GameObject prefab = (GameObject)Resources.Load ("Prefabs/Players_new/" + status.iRace);
 		GameObject spawned = (GameObject)Instantiate (prefab, status.position, Quaternion.Euler(Vector3.up * status.euler_y));
 		ICharacter ch = spawned.GetComponent<ICharacter> ();
-		ch.status = status;
+		ch.SetStatus (status);
 		ch.PrepareToGame();
 	}
 	public static void InstantiateItem (SavebleItem item) {

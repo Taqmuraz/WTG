@@ -53,7 +53,7 @@ public class IFontSetter : MonoBehaviour {
 
 	public static void SetFont (Text t) {
 		t.font = font;
-		t.fontSize = fontScale;
+		t.fontSize = (int)(fontScale * ScalebleUI.resolutionSize);
 	}
 
 	public static void SetFontForall () {

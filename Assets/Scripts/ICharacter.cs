@@ -230,7 +230,7 @@ public class SGame
 	public SQuest[] progress;
 	public List<DebugMessage> messages = new List<DebugMessage>();
 
-	public string currentLocationName = "Arena";
+	public string currentLocationName = "Village";
 
 	public DateTime date = new DateTime();
 
@@ -244,7 +244,7 @@ public class SGame
 	}
 	public static int currentProfile = 0;
 
-	public static SGame buffer;
+	public static SGame buffer { get; private set; }
 
 	public Saveble FindByName (string name) {
 		Saveble[] svs = locations [currentLocationName].objects;
@@ -262,7 +262,7 @@ public class SGame
 	}
 
 	public SGame (Saveble[] objects, SQuest[] progress) {
-		this.locations.Add ("Arena", new Location(objects, "Arena"));
+		this.locations.Add (currentLocationName, new Location(objects, currentLocationName));
 		this.progress = progress;
 	}
 
@@ -346,6 +346,9 @@ public class SGame
 		SQuest.current = game.progress;
 		buffer = game;
 		return game;
+	}
+	public static void SetGameAsNew () {
+		buffer = new SGame (new Saveble[1], SQuest.GetStart());
 	}
 	public static void CaptureGame () {
 		List<Saveble> savs = new List<Saveble> ();
@@ -1192,16 +1195,16 @@ public class WeaponSlot
 
 public class ICharacter : MonoBehaviour
 {
-	public Status status = new Status(ClassType.Simple);
-	public Renderer main_render;
-	public Transform trans;
-	public Animator anims;
-	public NavMeshAgent agent;
+	public Status status { get; private set; }
+	public Renderer main_render { get; private set; }
+	public Transform trans { get; private set; }
+	public Animator anims { get; private set; }
+	public NavMeshAgent agent { get; private set; }
 
 	[SerializeField]
 	private int lastArmor = -1;
 
-	public WeaponSlot weaponSlot;
+	public WeaponSlot weaponSlot { get; private set; }
 
 	public void Start () {
 		PrepareToGame ();
@@ -1213,7 +1216,14 @@ public class ICharacter : MonoBehaviour
 		main_render = GetComponentInChildren<SkinnedMeshRenderer> ();
 		charactersAll.Add (this);
 	}
-	public static List<ICharacter> charactersAll = new List<ICharacter>();
+	private static List<ICharacter> charactersAll_get = new List<ICharacter>();
+	public static List<ICharacter> charactersAll
+	{
+		get
+		{
+			return charactersAll_get;
+		}
+	}
 	public void AI_Update () {
 
 		if (status.canUseRunes && status.rune < 0) {
@@ -1250,24 +1260,37 @@ public class ICharacter : MonoBehaviour
 	public void CommitActionNow (Skill action) {
 		if (SkillSystem.HasInDatabase(action.name)) {
 			Vector3 dir = this == IControl.character ? IControl.cam.forward : trans.forward;
+			int minus = 1;
+			ICharacter enemy = GetBest (dir);
 			switch (action.targetType) {
 			case SkillTarget.Enemy:
-				action.action (new SkillActionData (this, GetBest(dir)));
+				
+				minus = enemy ? 1 : 0;
+				action.action (new SkillActionData (this, enemy));
 				break;
 			case SkillTarget.Ally:
-				action.action (new SkillActionData (this, GetBest(dir)));
+				minus = enemy ? 1 : 0;
+				action.action (new SkillActionData (this, enemy));
 				break;
 			case SkillTarget.Usable:
-				action.action (new SkillActionData (this, canUse));
+				IUsable us = canUse;
+				minus = us ? 1 : 0;
+				action.action (new SkillActionData (this, us));
 				break;
 			case SkillTarget.Self:
 				action.action (new SkillActionData (this, this));
 				break;
 			}
-			status.spellsToday -= 1;
+			Debug.Log (minus);
+			status.spellsToday -= minus;
 		}
 	}
+	private bool wasPrepared = false;
 	public void PrepareToGame () {
+
+		if (wasPrepared) {
+			return;
+		}
 
 		RawImage weaponImage = GetComponentInChildren<RawImage> ();
 
@@ -1285,6 +1308,8 @@ public class ICharacter : MonoBehaviour
 		} else {
 			status.health = status.maxHealth;
 		}
+
+		wasPrepared = true;
 	}
 	public void PrepareRend () {
 		Renderer[] rends = GetComponentsInChildren<SkinnedMeshRenderer> ();
@@ -1302,17 +1327,22 @@ public class ICharacter : MonoBehaviour
 			return status.name == "Player";
 		}
 	}
+	private void SetDestination (Vector3 dest) {
+		if (dest.magnitude > 0.15f && agent.isOnNavMesh) {
+			agent.SetDestination (dest);
+		}
+	}
 	public void AddMoney (int m) {
 		status.money += m;
 		MyDebug.Log ("Получено золото : " + m, Color.yellow, this);
 	}
 	public void MoveAt (Vector3 direction) {
 		if (canMove) {
-			agent.SetDestination (trans.position + direction);
+			SetDestination (trans.position + direction);
 
 			agent.speed = direction.magnitude * status.moveSpeed;
 		} else {
-			agent.SetDestination (trans.position);
+			Stop ();
 		}
 	}
 	public void MoveTo (Vector3 point) {
@@ -1323,10 +1353,10 @@ public class ICharacter : MonoBehaviour
 					door.Use (this);
 				}
 			}
-			agent.SetDestination (point);
+			SetDestination (point);
 			agent.speed = status.moveSpeed;
 		} else {
-			agent.SetDestination (trans.position);
+			Stop ();
 		}
 	}
 	public bool canMove
@@ -1413,17 +1443,21 @@ public class ICharacter : MonoBehaviour
 			return finded;
 		}
 	}
-	public float attack_clip_num = 0;
-	public float spell_clip_num = 0;
-	public float react_clip_num = 0;
+	public float attack_clip_num { get; private set; }
+	public float spell_clip_num { get; private set; }
+	public float react_clip_num { get; private set; }
 	private float combatState = 0;
 	private float combasStateLerp = 0;
-	public int attack_clips_count = 7;
-	public ICharacter tacked;
+	public const int attack_clips_count = 7;
+	public ICharacter tacked { get; private set; }
 	public void Stop () {
 		if (agent && agent.isOnNavMesh) {
 			agent.destination = trans.position;
 		}
+	}
+	public void SetStatus (Status st)
+	{
+		status = st;
 	}
 	public void Attack (ICharacter whom) {
 		if (!inCombat && !inReact) {
@@ -1454,7 +1488,7 @@ public class ICharacter : MonoBehaviour
 		{
 			return l;
 		}
-		set
+		private set
 		{
 			if (!inCombat) {
 				l = value;
@@ -1463,6 +1497,13 @@ public class ICharacter : MonoBehaviour
 				}
 				LookToSettedDirection ();
 			}
+		}
+	}
+	private void LookAtNow (Vector3 v) {
+		v = new Vector3 (v.x, trans.position.y, v.z);
+		if (v.magnitude > 0.15f) {
+			Quaternion next = Quaternion.LookRotation (v);
+			trans.rotation = Quaternion.Slerp (trans.rotation, next, Time.deltaTime * 4);
 		}
 	}
 	private void LookToSettedDirection () {
@@ -1627,8 +1668,9 @@ public class ICharacter : MonoBehaviour
 		combatState -= Time.deltaTime;
 		combatState = Mathf.Clamp (combatState, 0, combatState);
 		combasStateLerp = Mathf.Lerp (combasStateLerp, combatState, Time.deltaTime * 2);
+		float v = Mathf.Sqrt ((agent.destination - trans.position).magnitude);
 		if (agent) {
-			anims.SetFloat ("MoveK", Mathf.Sqrt((agent.destination - trans.position).magnitude));
+			anims.SetFloat ("MoveK", v);
 		}
 		float asp = 1.5f;
 		anims.SetFloat ("Attack", attack_clip_num);

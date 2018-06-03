@@ -48,11 +48,6 @@ public class ICreateMenu : MonoBehaviour {
 	public GameObject[] state_objs;
 	public TextAsset[] racesTexts;
 	public TextAsset[] classesTexts;
-
-	public RectTransform localField;
-	public RectTransform globalField;
-	public Vector2 localSize;
-	public Vector2 globalSize;
 	//public Scrollbar scroll;
 
 	public Color[] colorArray;
@@ -126,8 +121,6 @@ public class ICreateMenu : MonoBehaviour {
 			slots [i].text.text = slots[i].info + " = " + ints [i] + " [ 1 . . . " + maxs [i] + " ]";
 		}
 		paramsInfo.text = pinfo;
-		localSize = Vector2.up * localField.rect.height;
-		globalSize = Vector2.up * globalField.rect.height;
 		//float delta = Mathf.Abs((localSize - globalSize).y);
 		//scroll.size = 1 - delta / localSize.y;
 		//localField.anchoredPosition = Vector3.up * scroll.value * delta;
@@ -159,10 +152,10 @@ public class ICreateMenu : MonoBehaviour {
 	}
 
 	public void SaveAndPlay () {
-		SGame.buffer = new SGame (new Saveble[1], SQuest.GetStart());
+		SGame.SetGameAsNew ();
 		//status.items = IItemAsset.GetAllInventory ();
 		status.euler_y = 180f;
-		status.position = new SVector (-12, 0, -14.5f);
+		status.position = new SVector (10, 0, 10);
 		status.items = ItemsAsset.GetStartKit (status);
 		status.SetSpellsTodayBy ();
 		SGame.buffer.currentLocation.objects [0] = status;

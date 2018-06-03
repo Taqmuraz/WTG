@@ -345,7 +345,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 	private void CheckUse (IUsable can) {
 		if (!rui || !rut) {
 			rui = runtimeUse.image;
-			rut = runtimeUse.GetComponentInChildren<Text> ();
+			rut = runtimeUse.transform.parent.GetComponentInChildren<Text> ();
 		}
 		if (rui) {
 			rui.enabled = can;
@@ -725,7 +725,11 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
 		float slotSize = prefab.GetComponent<RectTransform>().rect.height;
 
-		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, slotSize * upd.Count);
+		float k = slotSize * ScalebleUI.resolutionSize;
+
+		slotSize = k;
+
+		parent.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, k * upd.Count);
 
 		for (int i = 0; i < upd.Count; i++) {
 			RectTransform trans = ((GameObject)Instantiate (prefab)).GetComponent<RectTransform> ();
@@ -748,6 +752,7 @@ public class IControl : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 			if (upd[i].count > 1) {
 				num = "(" + upd [i].count + ")";
 			}
+			trans.SetSizeWithCurrentAnchors (RectTransform.Axis.Vertical, k);
 			Text t = trans.GetComponentInChildren<Text> ();
 			if (t) {
 				

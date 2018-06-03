@@ -26,6 +26,7 @@ public class IMainMenu : MonoBehaviour {
 	public Button cancelRemoveButton;
 	public GameObject removeMenu;
 	public Scrollbar fontSize;
+	public Text fontSizeText;
 
 
 	private void Start () {
@@ -34,7 +35,7 @@ public class IMainMenu : MonoBehaviour {
 		SetState ();
 		LoadSettings ();
 		SetQualitySettings (settings.quality);
-		float v = (settings.fontSize - 11) / 20f;
+		float v = (settings.fontSize - 11) / 15f;
 		fontSize.value = v;
 		fontSize.onValueChanged.Invoke (v);
 	}
@@ -65,8 +66,8 @@ public class IMainMenu : MonoBehaviour {
 
 		fontSize.onValueChanged.RemoveAllListeners ();
 		fontSize.onValueChanged.AddListener (delegate {
-			int v = 11 + (int)(fontSize.value * 20);
-			fontSize.GetComponentInChildren<Text>().text = "Размер шрифта : " + v;
+			int v = 11 + (int)(fontSize.value * 15f);
+			fontSizeText.text = "Размер шрифта : " + v;
 			settings.fontSize = v;
 			IFontSetter.SetFontForall();
 		});
