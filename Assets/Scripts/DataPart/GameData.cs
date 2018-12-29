@@ -1,6 +1,7 @@
 ﻿using System;
 using RPG_System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace RPG_Data
 {
@@ -9,11 +10,8 @@ namespace RPG_Data
 	{
 		public static GameData activeGame { get; private set; }
 
-		public ObjectData[] objects { get; private set; }
-
 		public GameData (ObjectData[] objs) : base (objs)
 		{
-			objects = objs;
 		}
 
 		public static GameData LoadGame (string name)
@@ -28,11 +26,19 @@ namespace RPG_Data
 
 		public ObjectData GetByID (string id)
 		{
-			return objects.FirstOrDefault ((ObjectData od) => od.id == id);
+			return elements.FirstOrDefault ((ObjectData od) => od.id == id);
 		}
 		public static ObjectData GetActiveByID (string id)
 		{
 			return activeGame.GetByID (id);
+		}
+		public override void Add (ObjectData obj)
+		{
+			AddObjects (obj);
+		}
+		public void AddObjects (params ObjectData[] objs)
+		{
+			elements.AddRange (objs.Where ((ObjectData dat) => !GetByID (dat.id)));
 		}
 	}
 }

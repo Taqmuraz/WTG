@@ -14,7 +14,8 @@ namespace RPG_Data
 				typeof(CharacterBehaviour).FullName,
 				typeof(CharacterAnimator).FullName,
 				typeof(CharacterRigidbody).FullName,
-				typeof(CharacterCollider).FullName)
+				typeof(CharacterCollider).FullName,
+				typeof(CharacterSkin).FullName)
 		{
 			parameters = new CharacterParameterContainer (this, prms);
 		}

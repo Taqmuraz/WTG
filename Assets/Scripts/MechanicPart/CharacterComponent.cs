@@ -29,15 +29,18 @@ namespace RPG_Mechanic
 	}
 	public class CharacterCollider : AliveComponent<CapsuleCollider>
 	{
+		public const float CharacterHeight = 1f;
+
+
 		public CharacterCollider (AliveOverlay basedOn) : base (basedOn)
 		{
 		}
 		public override void Initialize ()
 		{
 			Transform trans = component.transform;
-			component.center = trans.position + trans.up;
-			component.height = 2f;
-			component.radius = 0.5f;
+			component.radius = CharacterHeight * 0.25f;
+			component.center = Vector3.up * CharacterHeight * 0.5f;
+			component.height = CharacterHeight;
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace RPG_Data
 		public override IDataContainer Install ()
 		{
 			GameObject prefabObj = ResourcesManager.LoadPrefab (prefab);
-			GameObject gameObject = GameObject.Instantiate (prefabObj);
+			GameObject gameObject = GameObject.Instantiate (prefabObj, position, Quaternion.Euler(euler));
 
 			Type[] types = { typeof(GameObject), typeof(ObjectData) };
 			object[] prms = { gameObject, this };

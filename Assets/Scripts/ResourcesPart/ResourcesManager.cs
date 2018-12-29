@@ -2,6 +2,7 @@
 using UnityEngine;
 using RPG_Data;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace RPG_System
 {

@@ -185,6 +185,9 @@ namespace RPG_Mechanic
 		{
 			Component toReturn = basedOn.GetComponent(type);
 			if (!toReturn) {
+				toReturn = basedOn.GetComponentInChildren (type);
+			}
+			if (!toReturn) {
 				toReturn = basedOn.AddComponent (type);
 			}
 			return toReturn;
